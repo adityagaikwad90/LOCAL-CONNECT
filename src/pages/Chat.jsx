@@ -12,8 +12,9 @@ import { io } from 'socket.io-client';
 
 const fallbackImage = 'https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1920&q=80';
 
-// Connect to our new custom Node.js Socket.io server
-const socket = io('http://localhost:5001');
+// Connect to our custom Socket.io server
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
+const socket = io(SOCKET_URL);
 
 const Chat = () => {
   const { currentUser, userData } = useAuth();
