@@ -143,7 +143,7 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Explore', path: '/explore', icon: <Compass size={18} /> },
     { name: 'Messages', path: '/chat', icon: <MessageSquare size={18} /> },
-    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+    ...(userData?.role === 'local' ? [{ name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }] : []),
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -160,11 +160,11 @@ const Navbar = () => {
         }`}>
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand to-accent flex items-center justify-center text-white shadow-lg shadow-brand/20 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand to-accent-light flex items-center justify-center text-white shadow-lg shadow-brand/40 group-hover:scale-110 group-hover:shadow-accent/40 transition-all duration-300">
               <Compass size={24} />
             </div>
             <span className="text-xl font-bold text-white tracking-tight hidden sm:block">
-              Local<span className="text-blue-400">Connect</span>
+              Local<span className="text-accent-light drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">Connect</span>
             </span>
           </Link>
 
@@ -174,10 +174,10 @@ const Navbar = () => {
               <Link 
                 key={link.path}
                 to={link.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
                   isActive(link.path) 
-                    ? 'bg-white/20 text-white shadow-lg shadow-black/5' 
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                    ? 'bg-white/20 text-white shadow-lg shadow-black/20 scale-105 border border-white/10' 
+                    : 'text-white/60 hover:text-white hover:bg-white/10 hover:scale-105'
                 }`}
               >
                 {link.icon}
@@ -188,10 +188,14 @@ const Navbar = () => {
             {currentUser ? (
               <>
                 <NotificationsMenu currentUser={currentUser} />
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-white/70 hover:text-white transition-colors">
+                <Link to="/profile" className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                  isActive('/profile') 
+                    ? 'bg-white/20 text-white shadow-lg shadow-black/5' 
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}>
                   <User size={18} />
                   <span>{userData?.name || currentUser.displayName || 'Profile'}</span>
-                </div>
+                </Link>
                 <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors ml-2">
                   <LogOut size={18} />
                   <span>Logout</span>
@@ -251,10 +255,14 @@ const Navbar = () => {
               <hr className="border-white/10 my-2" />
               {currentUser ? (
                 <>
-                  <div className="flex items-center gap-3 p-3 rounded-xl text-white/70">
+                  <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                    isActive('/profile') 
+                      ? 'bg-white/20 text-white' 
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                  }`}>
                     <User size={18} />
                     <span className="font-medium">{userData?.name || currentUser.displayName || 'Profile'}</span>
-                  </div>
+                  </Link>
                   <button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="flex items-center justify-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors mt-2">
                     <LogOut size={18} />
                     <span className="font-medium">Logout</span>

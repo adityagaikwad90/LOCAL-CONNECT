@@ -3,14 +3,17 @@ import { Calendar, MessageSquare, Star, MapPin, User, Settings, Bell, ChevronRig
 import { GlassCard, GlassButton } from '../common/UIComponents';
 import { motion } from 'framer-motion';
 import DashboardStats from './DashboardStats';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { trendingCities } from '../../data/mockData';
+import { Badge } from '../common/UIComponents';
 
 const ExplorerDashboard = ({ userData, currentUser }) => {
   const userName = userData?.name || currentUser?.displayName || 'Traveler';
+  const navigate = useNavigate();
 
   const explorerStats = [
-    { label: 'Upcoming Trips', value: '1', icon: Calendar, color: 'text-green-400' },
-    { label: 'Saved Locals', value: '4', icon: Star, color: 'text-yellow-400' },
+    { label: 'Upcoming Trips', value: upcomingTrips.length.toString(), icon: Calendar, color: 'text-green-400' },
+    { label: 'Liked Cities', value: (userData?.likedCities?.length || 0).toString(), icon: Star, color: 'text-yellow-400' },
     { label: 'Total Reviews', value: '2', icon: MessageSquare, color: 'text-blue-400' },
     { label: 'Active Chats', value: '3', icon: MessageSquare, color: 'text-purple-400' },
   ];
@@ -82,6 +85,50 @@ const ExplorerDashboard = ({ userData, currentUser }) => {
                   <p className="text-white/30 mb-4">No upcoming trips planned yet.</p>
                   <Link to="/explore">
                     <GlassButton variant="outline">Start Exploring</GlassButton>
+                  </Link>
+                </GlassCard>
+              )}
+            </div>
+          </section>
+
+          <section>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-white">Liked Destinations</h3>
+              <Link to="/explore" className="text-brand-light text-sm hover:underline">
+                View all
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {userData?.likedCities && userData.likedCities.length > 0 ? (
+                userData.likedCities.map((cityName) => {
+                  const city = trendingCities.find(c => c.name === cityName);
+                  if (!city) return null;
+                  return (
+                    <motion.div
+                      key={city.id}
+                      whileHover={{ y: -5 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <GlassCard className="p-0 overflow-hidden relative aspect-video group cursor-pointer" onClick={() => navigate(`/city/${city.name}`)}>
+                        <img 
+                          src={city.image} 
+                          alt={city.name} 
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-5 flex flex-col justify-end">
+                          <Badge variant="white" className="w-fit mb-2 text-[10px] py-0.5">{city.country}</Badge>
+                          <h4 className="text-xl font-bold text-white">{city.name}</h4>
+                        </div>
+                      </GlassCard>
+                    </motion.div>
+                  );
+                })
+              ) : (
+                <GlassCard className="col-span-full p-12 text-center border-dashed border-white/10 bg-transparent hover:bg-white/5">
+                  <p className="text-white/30 mb-4">You haven't liked any cities yet.</p>
+                  <Link to="/explore">
+                    <GlassButton variant="outline">Explore Cities</GlassButton>
                   </Link>
                 </GlassCard>
               )}

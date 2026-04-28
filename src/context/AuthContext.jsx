@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, db } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 const AuthContext = createContext({});
 
@@ -39,10 +39,23 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
+  const updateUserData = async (newData) => {
+    if (!currentUser) return;
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, newData);
+      setUserData(prev => ({ ...prev, ...newData }));
+    } catch (error) {
+      console.error("Error updating user data:", error);
+      throw error;
+    }
+  };
+
   const value = {
     currentUser,
     userData,
-    loading
+    loading,
+    updateUserData
   };
 
   return (

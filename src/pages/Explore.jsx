@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Star, User, Tag, ChevronDown, Users } from 'lucide-react';
+import { MapPin, Star, User, Tag, ChevronDown, Users, Heart } from 'lucide-react';
 import { trendingCities } from '../data/mockData';
 import { GlassCard, GlassButton, Badge } from '../components/common/UIComponents';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase/config';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 
@@ -15,6 +16,31 @@ const Explore = () => {
   const [loadingLocations, setLoadingLocations] = useState(true);
   const locationState = useLocation();
   const navigate = useNavigate();
+  const { userData, updateUserData, currentUser } = useAuth();
+
+  const toggleLikeCity = async (e, cityName) => {
+    e.stopPropagation(); // Prevent navigation to city page
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+
+    const currentLikedCities = userData?.likedCities || [];
+    const isLiked = currentLikedCities.includes(cityName);
+    
+    let newLikedCities;
+    if (isLiked) {
+      newLikedCities = currentLikedCities.filter(city => city !== cityName);
+    } else {
+      newLikedCities = [...currentLikedCities, cityName];
+    }
+
+    try {
+      await updateUserData({ likedCities: newLikedCities });
+    } catch (err) {
+      console.error("Error toggling like:", err);
+    }
+  };
 
   // Fetch locations on mount
   useEffect(() => {
@@ -161,6 +187,18 @@ const Explore = () => {
                   alt={city.name} 
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
+                <div className="absolute top-4 right-4 z-20">
+                  <button 
+                    onClick={(e) => toggleLikeCity(e, city.name)}
+                    className={`p-2.5 rounded-xl backdrop-blur-md border transition-all duration-300 ${
+                      userData?.likedCities?.includes(city.name) 
+                      ? 'bg-brand/60 border-brand text-white shadow-lg shadow-brand/20' 
+                      : 'bg-black/20 border-white/10 text-white/70 hover:bg-black/40 hover:text-white'
+                    }`}
+                  >
+                    <Heart size={18} className={userData?.likedCities?.includes(city.name) ? 'fill-current' : ''} />
+                  </button>
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
                   <Badge variant="white" className="w-fit mb-3">{city.country}</Badge>
                   <h3 className="text-2xl font-bold text-white mb-1">{city.name}</h3>

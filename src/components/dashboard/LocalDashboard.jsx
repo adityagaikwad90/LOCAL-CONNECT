@@ -146,9 +146,11 @@ const LocalDashboard = ({ userData, currentUser }) => {
               </div>
             </div>
 
-            <GlassButton variant="accent" className="w-full mt-8 py-3.5 text-sm font-bold">
-              Preview Public Profile
-            </GlassButton>
+            <Link to="/profile">
+              <GlassButton variant="accent" className="w-full mt-8 py-3.5 text-sm font-bold">
+                Preview Public Profile
+              </GlassButton>
+            </Link>
           </GlassCard>
 
           <GlassCard className="p-8 border-green-500/20 bg-green-500/5">

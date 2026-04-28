@@ -16,7 +16,7 @@ const Home = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <Badge variant="accent">Experience the World Authentically</Badge>
+          <Badge variant="accent" className="bg-vibrant-pink/20 text-vibrant-pink border-vibrant-pink/30">Experience the World Authentically</Badge>
           <h1 className="text-5xl md:text-7xl font-bold text-white mt-6 mb-8 tracking-tight leading-tight">
             Explore Cities with <br />
             <span className="text-gradient">Trusted Locals</span>
@@ -102,7 +102,7 @@ const Home = () => {
               { icon: MapPin, title: 'Explore together', text: 'Meet your guide and discover hidden gems and stories away from the crowds.' }
             ].map((step, idx) => (
               <div key={idx} className="text-center group">
-                <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-6 border border-white/10 group-hover:bg-brand transition-colors duration-500">
+                <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-6 border border-white/10 group-hover:bg-gradient-to-tr group-hover:from-brand group-hover:to-accent group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg group-hover:shadow-brand/20">
                   <step.icon size={28} className="text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>

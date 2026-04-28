@@ -1,11 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ExplorerDashboard from '../components/dashboard/ExplorerDashboard';
 import LocalDashboard from '../components/dashboard/LocalDashboard';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { userData, currentUser, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && userData && userData.role === 'explorer') {
+      navigate('/explore');
+    }
+  }, [userData, loading, navigate]);
   
   if (loading) {
     return (
