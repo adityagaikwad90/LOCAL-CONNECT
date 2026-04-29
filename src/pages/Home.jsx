@@ -22,8 +22,11 @@ const Home = () => {
             <span className="text-gradient">Trusted Locals</span>
           </h1>
           <p className="text-white/60 text-lg md:text-xl max-w-2xl mx-auto mb-12">
-            Skip the tourist traps. Connect with verified residents who share your interests for personalized guidance and unique experiences.
+            Skip the tourist traps. Connect with verified residents who share your interests for personalized guidance and unique experiences. <br />
+            <br />
+            <p> presented by - Aditya ,Manish ,Vaishnavi, Mayur</p>
           </p>
+
 
         </motion.div>
       </section>
@@ -47,13 +50,13 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1 }}
             >
-              <GlassCard 
+              <GlassCard
                 className="group cursor-pointer p-0 overflow-hidden border-none aspect-[4/5] relative"
                 onClick={() => navigate(`/city/${city.name}`)}
               >
-                <img 
-                  src={city.image} 
-                  alt={city.name} 
+                <img
+                  src={city.image}
+                  alt={city.name}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
@@ -89,7 +92,7 @@ const Home = () => {
         <div className="glass rounded-[3rem] p-12 md:p-20 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-brand/10 blur-[100px] rounded-full -mr-48 -mt-48" />
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full -ml-48 -mb-48" />
-          
+
           <div className="relative text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">How it Works</h2>
             <p className="text-white/50 max-w-xl mx-auto">Three simple steps to experience your next destination like a local.</p>
@@ -141,6 +144,7 @@ const Home = () => {
           <div className="flex flex-wrap justify-center gap-4">
             <GlassButton variant="accent" className="px-12 py-4 text-lg">Start Exploring</GlassButton>
             <GlassButton variant="outline" className="px-12 py-4 text-lg">Become a Local</GlassButton>
+
           </div>
         </div>
       </section>
