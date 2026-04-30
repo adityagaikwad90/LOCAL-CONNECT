@@ -1,25 +1,26 @@
 import React from 'react';
-import { Calendar, MessageSquare, Star, MapPin, User, Settings, Bell, ChevronRight } from 'lucide-react';
+import { Calendar, MessageSquare, Star, MapPin, User, Settings, ChevronRight } from 'lucide-react';
 import { GlassCard, GlassButton } from '../common/UIComponents';
 import { motion } from 'framer-motion';
 import DashboardStats from './DashboardStats';
 import { Link, useNavigate } from 'react-router-dom';
 import { trendingCities } from '../../data/mockData';
 import { Badge } from '../common/UIComponents';
+import NotificationsMenu from '../common/NotificationsMenu';
 
 const ExplorerDashboard = ({ userData, currentUser }) => {
   const userName = userData?.name || currentUser?.displayName || 'Traveler';
   const navigate = useNavigate();
+
+  const upcomingTrips = [
+    { id: 1, name: 'Yuki Tanaka', date: 'Nov 12, 2023', city: 'Tokyo', status: 'confirmed', image: 'Y' },
+  ];
 
   const explorerStats = [
     { label: 'Upcoming Trips', value: upcomingTrips.length.toString(), icon: Calendar, color: 'text-green-400' },
     { label: 'Liked Cities', value: (userData?.likedCities?.length || 0).toString(), icon: Star, color: 'text-yellow-400' },
     { label: 'Total Reviews', value: '2', icon: MessageSquare, color: 'text-blue-400' },
     { label: 'Active Chats', value: '3', icon: MessageSquare, color: 'text-purple-400' },
-  ];
-
-  const upcomingTrips = [
-    { id: 1, name: 'Yuki Tanaka', date: 'Nov 12, 2023', city: 'Tokyo', status: 'confirmed', image: 'Y' },
   ];
 
   const recentActivity = [
@@ -35,10 +36,7 @@ const ExplorerDashboard = ({ userData, currentUser }) => {
           <p className="text-white/50">Your next adventure is just a click away.</p>
         </div>
         <div className="flex gap-4">
-          <button className="p-3 rounded-2xl glass hover:bg-white/10 text-white relative group transition-all">
-            <Bell size={20} className="group-hover:scale-110 transition-transform" />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand rounded-full border-2 border-[#1e1b4b]" />
-          </button>
+          <NotificationsMenu currentUser={currentUser} className="p-1 rounded-2xl glass hover:bg-white/10" />
           <GlassButton variant="outline" className="px-4 py-3">
             <Settings size={20} />
           </GlassButton>

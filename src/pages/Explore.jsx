@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Star, User, Tag, ChevronDown, Users, Heart } from 'lucide-react';
-import { trendingCities } from '../data/mockData';
+import { trendingCities as mockTrendingCities } from '../data/mockData';
 import { GlassCard, GlassButton, Badge } from '../components/common/UIComponents';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +14,7 @@ const Explore = () => {
   const [locals, setLocals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingLocations, setLoadingLocations] = useState(true);
+  const [trendingCities, setTrendingCities] = useState(mockTrendingCities);
   const locationState = useLocation();
   const navigate = useNavigate();
   const { userData, updateUserData, currentUser } = useAuth();
@@ -41,6 +42,30 @@ const Explore = () => {
       console.error("Error toggling like:", err);
     }
   };
+
+  // Fetch locations on mount
+  useEffect(() => {
+    const fetchLocalsCount = async () => {
+      try {
+        const updatedCities = await Promise.all(
+          mockTrendingCities.map(async (city) => {
+            const q = query(
+              collection(db, 'users'),
+              where('role', '==', 'local'),
+              where('location', '==', city.name)
+            );
+            const querySnapshot = await getDocs(q);
+            return { ...city, localsCount: querySnapshot.size };
+          })
+        );
+        setTrendingCities(updatedCities);
+      } catch (error) {
+        console.error("Error fetching locals count:", error);
+      }
+    };
+
+    fetchLocalsCount();
+  }, []);
 
   // Fetch locations on mount
   useEffect(() => {

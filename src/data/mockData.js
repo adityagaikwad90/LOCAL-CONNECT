@@ -4,7 +4,7 @@ export const trendingCities = [
     name: 'Mumbai',
     country: 'India',
     image: 'https://images.unsplash.com/photo-1566552881560-0be862a7c445?auto=format&fit=crop&w=800&q=80',
-    localsCount: 156,
+    localsCount: 0,
     rating: 4.9,
     topPlaces: ['Gateway of India', 'Marine Drive', 'Colaba Causeway']
   },
@@ -13,7 +13,7 @@ export const trendingCities = [
     name: 'Jaipur',
     country: 'India',
     image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=800&q=80',
-    localsCount: 89,
+    localsCount: 0,
     rating: 4.8,
     topPlaces: ['Hawa Mahal', 'Amer Fort', 'City Palace']
   },
@@ -22,7 +22,7 @@ export const trendingCities = [
     name: 'Surat',
     country: 'India',
     image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80',
-    localsCount: 56,
+    localsCount: 0,
     rating: 4.7,
     topPlaces: ['Dumas Beach', 'Dutch Garden', 'Surat Castle']
   },
@@ -31,7 +31,7 @@ export const trendingCities = [
     name: 'Nashik',
     country: 'India',
     image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=800&q=80',
-    localsCount: 42,
+    localsCount: 0,
     rating: 4.6,
     topPlaces: ['Sula Vineyards', 'Panchavati', 'Trimbakeshwar Temple']
   },
@@ -40,7 +40,7 @@ export const trendingCities = [
     name: 'Vadodara',
     country: 'India',
     image: 'https://images.unsplash.com/photo-1506461883276-594a12b11cf3?auto=format&fit=crop&w=800&q=80',
-    localsCount: 38,
+    localsCount: 0,
     rating: 4.8,
     topPlaces: ['Laxmi Vilas Palace', 'Sayaji Baug', 'Champaner-Pavagadh']
   }

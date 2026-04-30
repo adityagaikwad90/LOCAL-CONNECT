@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MapPin, Users, ArrowLeft, Star, Tag, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +16,7 @@ const CityPage = () => {
   const [locals, setLocals] = useState([]);
   const [loadingLocals, setLoadingLocals] = useState(false);
   const [showLocals, setShowLocals] = useState(false);
+  const [actualLocalsCount, setActualLocalsCount] = useState(null);
   const localsSectionRef = useRef(null);
 
   // Find the city in mock data to get its image, or use fallback
@@ -26,6 +27,23 @@ const CityPage = () => {
     localsCount: 'Many',
     rating: 'New'
   };
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const q = query(
+          collection(db, 'users'),
+          where('role', '==', 'local'),
+          where('location', '==', cityData.name)
+        );
+        const querySnapshot = await getDocs(q);
+        setActualLocalsCount(querySnapshot.size);
+      } catch (err) {
+        console.error("Error fetching local count:", err);
+      }
+    };
+    fetchCount();
+  }, [cityData.name]);
 
   const handleSeeLocals = async () => {
     if (showLocals) {
@@ -115,7 +133,7 @@ const CityPage = () => {
               disabled={loadingLocals && !showLocals}
             >
               <Users size={24} />
-              {loadingLocals && !locals.length ? 'Loading...' : 'See Locals'}
+              {loadingLocals && !locals.length ? 'Loading...' : `See Locals (${actualLocalsCount !== null ? actualLocalsCount : '...'})`}
             </GlassButton>
             
             <GlassButton 

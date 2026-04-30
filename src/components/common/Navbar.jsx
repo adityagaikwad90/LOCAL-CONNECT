@@ -1,124 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Compass, MessageSquare, LayoutDashboard, Search, Menu, X, User, LogOut, Bell } from 'lucide-react';
+import { Compass, MessageSquare, LayoutDashboard, Search, Menu, X, User, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { auth, db } from '../../firebase/config';
+import { auth } from '../../firebase/config';
 import { signOut } from 'firebase/auth';
-import { collection, query, where, onSnapshot, orderBy, doc, updateDoc } from 'firebase/firestore';
-
-const NotificationsMenu = ({ currentUser }) => {
-  const [notifications, setNotifications] = useState([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!currentUser) return;
-
-    const q = query(
-      collection(db, 'notifications'),
-      where('userId', '==', currentUser.uid),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const notifs = [];
-      snapshot.forEach((doc) => {
-        notifs.push({ id: doc.id, ...doc.data() });
-      });
-      setNotifications(notifs);
-    });
-
-    return unsubscribe;
-  }, [currentUser]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const handleNotificationClick = async (notif) => {
-    if (!notif.read) {
-      await updateDoc(doc(db, 'notifications', notif.id), { read: true });
-    }
-    setIsOpen(false);
-    if (notif.link) {
-      navigate(notif.link);
-    }
-  };
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors relative"
-      >
-        <Bell size={20} />
-        {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1e1b4b]" />
-        )}
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-80 glass rounded-2xl overflow-hidden shadow-2xl border border-white/10"
-          >
-            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-              <h3 className="text-white font-bold">Notifications</h3>
-              {unreadCount > 0 && (
-                <span className="text-xs text-brand-light bg-brand/20 px-2 py-1 rounded-full">{unreadCount} New</span>
-              )}
-            </div>
-            <div className="max-h-80 overflow-y-auto custom-scrollbar">
-              {notifications.length === 0 ? (
-                <div className="p-8 text-center text-white/50 text-sm">
-                  No notifications yet.
-                </div>
-              ) : (
-                <div className="divide-y divide-white/5">
-                  {notifications.map((notif) => (
-                    <button
-                      key={notif.id}
-                      onClick={() => handleNotificationClick(notif)}
-                      className={`w-full text-left p-4 hover:bg-white/5 transition-colors flex gap-3 ${!notif.read ? 'bg-white/5' : ''}`}
-                    >
-                      <div className="shrink-0 mt-1">
-                        {!notif.read ? (
-                          <div className="w-2 h-2 bg-brand rounded-full" />
-                        ) : (
-                          <div className="w-2 h-2 rounded-full border border-white/20" />
-                        )}
-                      </div>
-                      <div>
-                        <p className={`text-sm ${!notif.read ? 'text-white font-bold' : 'text-white/80'}`}>
-                          {notif.title}
-                        </p>
-                        <p className="text-xs text-white/50 mt-1 line-clamp-2">{notif.body}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
+import NotificationsMenu from './NotificationsMenu';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -143,7 +30,7 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Explore', path: '/explore', icon: <Compass size={18} /> },
     { name: 'Messages', path: '/chat', icon: <MessageSquare size={18} /> },
-    ...(userData?.role === 'local' ? [{ name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }] : []),
+    ...(currentUser ? [{ name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }] : []),
   ];
 
   const isActive = (path) => location.pathname === path;

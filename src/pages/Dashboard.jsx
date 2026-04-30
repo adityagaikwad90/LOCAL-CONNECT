@@ -10,12 +10,21 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && userData && userData.role === 'explorer') {
-      navigate('/explore');
+    if (!loading && !currentUser) {
+      navigate('/login');
     }
-  }, [userData, loading, navigate]);
+  }, [currentUser, loading, navigate]);
   
-  if (loading) {
+  if (loading || !currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If we have a user but no userData yet, we might still be fetching role
+  if (currentUser && !userData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin" />

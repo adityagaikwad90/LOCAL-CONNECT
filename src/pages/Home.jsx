@@ -1,12 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Star, ShieldCheck, Zap, Users } from 'lucide-react';
-import { trendingCities, testimonials } from '../data/mockData';
+import { trendingCities as mockTrendingCities, testimonials } from '../data/mockData';
 import { GlassCard, GlassButton, Badge } from '../components/common/UIComponents';
+import { db } from '../firebase/config';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const Home = () => {
   const navigate = useNavigate();
+  const [trendingCities, setTrendingCities] = useState(mockTrendingCities);
+
+  useEffect(() => {
+    const fetchLocalsCount = async () => {
+      try {
+        const updatedCities = await Promise.all(
+          mockTrendingCities.map(async (city) => {
+            const q = query(
+              collection(db, 'users'),
+              where('role', '==', 'local'),
+              where('location', '==', city.name)
+            );
+            const querySnapshot = await getDocs(q);
+            return { ...city, localsCount: querySnapshot.size };
+          })
+        );
+        setTrendingCities(updatedCities);
+      } catch (error) {
+        console.error("Error fetching locals count:", error);
+      }
+    };
+
+    fetchLocalsCount();
+  }, []);
   return (
     <div className="pt-24 min-h-screen">
       {/* Hero Section */}
