@@ -30,7 +30,7 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Explore', path: '/explore', icon: <Compass size={18} /> },
     { name: 'Messages', path: '/chat', icon: <MessageSquare size={18} /> },
-    ...(currentUser ? [{ name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }] : []),
+    ...(currentUser && userData?.role === 'local' ? [{ name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }] : []),
   ];
 
   const isActive = (path) => location.pathname === path;

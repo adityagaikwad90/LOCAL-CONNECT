@@ -10,10 +10,14 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !currentUser) {
-      navigate('/login');
+    if (!loading) {
+      if (!currentUser) {
+        navigate('/login');
+      } else if (userData?.role === 'explorer') {
+        navigate('/explore');
+      }
     }
-  }, [currentUser, loading, navigate]);
+  }, [currentUser, userData, loading, navigate]);
   
   if (loading || !currentUser) {
     return (
