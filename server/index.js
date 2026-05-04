@@ -73,7 +73,7 @@ app.post('/api/ai/chat', async (req, res) => {
     const systemInstruction = "You are a helpful travel assistant for an app called LocalConnect. You help travelers find locals, get city recommendations, and plan itineraries. Keep your responses concise, friendly, and formatted nicely with markdown if possible.";
     
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: prompt,
       config: {
         systemInstruction,
