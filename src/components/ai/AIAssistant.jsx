@@ -43,8 +43,8 @@ const AIAssistant = () => {
     setIsLoading(true);
 
     try {
-      // Make API call to backend
-      const response = await fetch('http://localhost:5001/api/ai/chat', {
+      const backendUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
+      const response = await fetch(`${backendUrl}/api/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
