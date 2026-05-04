@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import CityPage from './pages/CityPage';
+import AIAssistant from './components/ai/AIAssistant';
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -58,6 +59,7 @@ function App() {
         </AnimatePresence>
       </main>
 
+      <AIAssistant />
       <Footer />
     </div>
   );
