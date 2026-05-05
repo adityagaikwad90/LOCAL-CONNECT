@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { auth } from '../../firebase/config';
 import { signOut } from 'firebase/auth';
 import NotificationsMenu from './NotificationsMenu';
+import { Magnetic } from './UIComponents';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -37,13 +38,13 @@ const Navbar = () => {
 
   return (
     <nav 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'py-3' : 'py-6'
+      className={`fixed top-0 left-0 right-0 z-50 flex justify-center transition-all duration-500 ${
+        isScrolled ? 'py-4' : 'py-8'
       }`}
     >
-      <div className="container mx-auto px-4">
-        <div className={`glass rounded-2xl p-2 px-6 flex items-center justify-between transition-all duration-300 ${
-          isScrolled ? 'bg-white/10' : 'bg-white/5 border-transparent'
+      <div className="w-full max-w-5xl px-4">
+        <div className={`rounded-full p-2 px-6 flex items-center justify-between transition-all duration-500 border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl ${
+          isScrolled ? 'bg-black/60' : 'bg-white/10'
         }`}>
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
@@ -56,47 +57,58 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
-              <Link 
-                key={link.path}
-                to={link.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
-                  isActive(link.path) 
-                    ? 'bg-white/20 text-white shadow-lg shadow-black/20 scale-105 border border-white/10' 
-                    : 'text-white/60 hover:text-white hover:bg-white/10 hover:scale-105'
-                }`}
-              >
-                {link.icon}
-                {link.name}
-              </Link>
+              <Magnetic key={link.path} strength={0.2}>
+                <Link 
+                  to={link.path}
+                  className={`group flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
+                    isActive(link.path) 
+                      ? 'bg-gradient-to-r from-brand to-brand-dark text-white shadow-[0_0_15px_rgba(225,29,72,0.4)] border border-brand-light/30' 
+                      : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]'
+                  }`}
+                >
+                  <div className={`${isActive(link.path) ? 'text-white' : 'text-white/50 group-hover:text-white'}`}>
+                    {link.icon}
+                  </div>
+                  {link.name}
+                </Link>
+              </Magnetic>
             ))}
-            <div className="w-px h-6 bg-white/10 mx-2" />
+            <div className="w-px h-6 bg-white/10 mx-3" />
             {currentUser ? (
               <>
                 <NotificationsMenu currentUser={currentUser} />
-                <Link to="/profile" className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
-                  isActive('/profile') 
-                    ? 'bg-white/20 text-white shadow-lg shadow-black/5' 
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
-                }`}>
-                  <User size={18} />
-                  <span>{userData?.name || currentUser.displayName || 'Profile'}</span>
-                </Link>
-                <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors ml-2">
-                  <LogOut size={18} />
-                  <span>Logout</span>
-                </button>
+                <Magnetic strength={0.2}>
+                  <Link to="/profile" className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-200 ${
+                    isActive('/profile') 
+                      ? 'bg-white/20 text-white shadow-lg shadow-black/5' 
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                  }`}>
+                    <User size={18} />
+                    <span className="font-medium">{userData?.name || currentUser.displayName || 'Profile'}</span>
+                  </Link>
+                </Magnetic>
+                <Magnetic strength={0.2}>
+                  <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-colors ml-1">
+                    <LogOut size={18} />
+                    <span className="font-medium">Logout</span>
+                  </button>
+                </Magnetic>
               </>
             ) : (
               <>
-                <Link to="/login" className="flex items-center gap-2 px-4 py-2 rounded-xl text-white/70 hover:text-white transition-colors">
-                  <User size={18} />
-                  <span>Login</span>
-                </Link>
-                <Link to="/register" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white hover:bg-brand-light transition-colors ml-2">
-                  <span>Sign Up</span>
-                </Link>
+                <Magnetic strength={0.2}>
+                  <Link to="/login" className="flex items-center gap-2 px-5 py-2.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors font-medium">
+                    <User size={18} />
+                    <span>Login</span>
+                  </Link>
+                </Magnetic>
+                <Magnetic strength={0.2}>
+                  <Link to="/register" className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-brand to-vibrant-pink text-white hover:shadow-[0_0_20px_rgba(225,29,72,0.6)] hover:-translate-y-0.5 transition-all duration-300 ml-2 font-bold border border-white/20">
+                    <span>Sign Up</span>
+                  </Link>
+                </Magnetic>
               </>
             )}
           </div>

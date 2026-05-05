@@ -30,7 +30,7 @@ export const trendingCities = [
     id: 4,
     name: 'Nashik',
     country: 'India',
-    image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=800&q=80',
     localsCount: 0,
     rating: 4.6,
     topPlaces: ['Sula Vineyards', 'Panchavati', 'Trimbakeshwar Temple']
@@ -43,6 +43,51 @@ export const trendingCities = [
     localsCount: 0,
     rating: 4.8,
     topPlaces: ['Laxmi Vilas Palace', 'Sayaji Baug', 'Champaner-Pavagadh']
+  },
+  {
+    id: 6,
+    name: 'Bangalore',
+    country: 'India',
+    image: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=800&q=80',
+    localsCount: 0,
+    rating: 4.8,
+    topPlaces: ['Lalbagh Botanical Garden', 'Bangalore Palace', 'Cubbon Park']
+  },
+  {
+    id: 7,
+    name: 'New Delhi',
+    country: 'India',
+    image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=800&q=80',
+    localsCount: 0,
+    rating: 4.9,
+    topPlaces: ['Red Fort', 'Qutub Minar', 'India Gate']
+  },
+  {
+    id: 8,
+    name: 'Chennai',
+    country: 'India',
+    image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=800&q=80',
+    localsCount: 0,
+    rating: 4.7,
+    topPlaces: ['Marina Beach', 'Kapaleeshwarar Temple', 'Fort St. George']
+  },
+  {
+    id: 9,
+    name: 'Hyderabad',
+    country: 'India',
+    image: 'https://images.unsplash.com/photo-1513326738677-b964603b136d?auto=format&fit=crop&w=800&q=80',
+    localsCount: 0,
+    rating: 4.8,
+    topPlaces: ['Charminar', 'Golconda Fort', 'Ramoji Film City']
+  },
+  {
+    id: 10,
+    name: 'Kolkata',
+    country: 'India',
+    image: 'https://images.unsplash.com/photo-1558431382-27e303142255?auto=format&fit=crop&w=800&q=80',
+    localsCount: 0,
+    rating: 4.7,
+    topPlaces: ['Victoria Memorial', 'Howrah Bridge', 'Dakshineswar Kali Temple']
   }
 ];
 

@@ -80,16 +80,32 @@ const AIAssistant = () => {
     <>
       {/* Floating Action Button */}
       <motion.button
-        className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-lg shadow-brand/30 backdrop-blur-md border border-white/20 transition-all duration-300 ${
+        className={`fixed bottom-8 right-8 z-50 flex items-center justify-center p-4 rounded-full shadow-[0_0_20px_rgba(139,92,246,0.5)] backdrop-blur-md border border-white/30 transition-all duration-300 group ${
           isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
-        } bg-gradient-to-r from-brand to-vibrant-indigo text-white hover:shadow-xl hover:shadow-brand/40`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        } bg-gradient-to-r from-brand via-purple-500 to-vibrant-indigo text-white hover:shadow-[0_0_30px_rgba(139,92,246,0.8)]`}
+        animate={{ y: [0, -10, 0] }}
+        transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(true)}
       >
-        <div className="relative">
-          <Bot size={28} />
-          <Sparkles size={12} className="absolute -top-1 -right-1 text-yellow-300 animate-pulse" />
+        {/* Glow effect behind the button */}
+        <div className="absolute inset-0 rounded-full bg-white/20 blur-xl animate-pulse transition-colors"></div>
+        
+        {/* Tooltip */}
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 text-brand px-3 py-1.5 rounded-xl text-sm font-bold shadow-lg opacity-0 group-hover:opacity-100 group-hover:-translate-y-2 transition-all duration-300 whitespace-nowrap pointer-events-none border border-white/50 backdrop-blur-sm">
+          Ask AI ✨
+        </div>
+
+        <div className="relative z-10 flex items-center justify-center">
+          <Bot size={32} className="drop-shadow-lg" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+            className="absolute -top-2 -right-2 text-yellow-300"
+          >
+            <Sparkles size={16} />
+          </motion.div>
         </div>
       </motion.button>
 

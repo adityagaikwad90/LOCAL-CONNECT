@@ -8,14 +8,14 @@ export default {
     extend: {
       colors: {
         brand: {
-          light: '#a78bfa', // Bright Violet
-          DEFAULT: '#8b5cf6', // Violet 500
-          dark: '#7c3aed', // Violet 600
+          light: '#fb7185', // Rose 400
+          DEFAULT: '#e11d48', // Rose 600
+          dark: '#be123c', // Rose 700
         },
         accent: {
-          light: '#22d3ee', // Cyan 400
-          DEFAULT: '#06b6d4', // Cyan 500
-          dark: '#0891b2', // Cyan 600
+          light: '#fbbf24', // Amber 400
+          DEFAULT: '#f59e0b', // Amber 500
+          dark: '#d97706', // Amber 600
         },
         vibrant: {
           pink: '#f472b6',
