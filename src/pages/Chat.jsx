@@ -99,16 +99,29 @@ const Chat = () => {
           setActiveChat(existingChat);
         }
       } else {
-        // Chat doesn't exist, create it safely without triggering loops
+        // Chat doesn't exist in local snapshot yet, but verify on server before creating to prevent duplicates
         if (!creatingChatRef.current) {
           creatingChatRef.current = true;
           const createChat = async () => {
             try {
-              const newChatRef = await addDoc(collection(db, 'chats'), {
-                participants: [currentUser.uid, urlUserId],
-                updatedAt: serverTimestamp()
-              });
-              setActiveChat({ id: newChatRef.id, participants: [currentUser.uid, urlUserId] });
+              // Verify on server first to prevent race condition with onSnapshot cache
+              const verifyQ = query(
+                collection(db, 'chats'),
+                where('participants', 'array-contains', currentUser.uid)
+              );
+              const { getDocs } = await import('firebase/firestore');
+              const snapshot = await getDocs(verifyQ);
+              const existingOnServer = snapshot.docs.find(d => d.data().participants.includes(urlUserId));
+              
+              if (existingOnServer) {
+                setActiveChat({ id: existingOnServer.id, participants: existingOnServer.data().participants });
+              } else {
+                const newChatRef = await addDoc(collection(db, 'chats'), {
+                  participants: [currentUser.uid, urlUserId],
+                  updatedAt: serverTimestamp()
+                });
+                setActiveChat({ id: newChatRef.id, participants: [currentUser.uid, urlUserId] });
+              }
             } catch (err) {
               console.error("Error creating chat:", err);
             } finally {

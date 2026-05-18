@@ -66,17 +66,15 @@ const NotificationsMenu = ({ currentUser, className = "" }) => {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleNotificationClick = async (notif) => {
-    if (!notif.read) {
-      try {
-        await updateDoc(doc(db, 'notifications', notif.id), { read: true });
-      } catch (err) {
-        console.error("Error marking notification as read:", err);
-      }
-    }
+  const handleNotificationClick = (notif) => {
     setIsOpen(false);
     if (notif.link) {
       navigate(notif.link);
+    }
+    if (!notif.read) {
+      updateDoc(doc(db, 'notifications', notif.id), { read: true }).catch((err) => {
+        console.error("Error marking notification as read:", err);
+      });
     }
   };
 
