@@ -144,7 +144,7 @@ const Profile = () => {
             </div>
           </GlassCard>
 
-          {isExplorer && isMyProfile && profileData.likedCities?.length > 0 && (
+          {isMyProfile && profileData.likedCities?.length > 0 && (
             <section>
               <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                 <Heart size={24} className="text-brand-light fill-brand-light" />

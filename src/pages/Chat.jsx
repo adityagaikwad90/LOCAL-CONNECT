@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Send, MoreVertical, Phone, Image as ImageIcon, Smile, ArrowLeft, MessageSquare, Mic, Paperclip, CheckCheck, Sparkles, Circle } from 'lucide-react';
+import { Search, Send, MoreVertical, Phone, Video, X, Image as ImageIcon, Smile, ArrowLeft, MessageSquare, Mic, Paperclip, CheckCheck, Sparkles, Circle } from 'lucide-react';
 import { GlassCard } from '../components/common/UIComponents';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore';
 import { io } from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
+import WebRTCVideoCall from '../components/chat/WebRTCVideoCall';
 
 const fallbackImage = 'https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1920&q=80';
 
@@ -29,6 +30,10 @@ const Chat = () => {
   const [userCache, setUserCache] = useState({});
   const [loadingChats, setLoadingChats] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
+  const [isVideoCallOpen, setIsVideoCallOpen] = useState(false);
+  const [incomingCall, setIncomingCall] = useState(null); // { chatId, callerId, callerName, callerImage }
+  const [outboundCall, setOutboundCall] = useState(false);
+  const [isCaller, setIsCaller] = useState(false);
   const tabs = ['All', 'Unread', 'Groups', 'AI'];
   
   const messagesEndRef = useRef(null);
@@ -167,12 +172,37 @@ const Chat = () => {
     };
     socket.on('receive_message', handleReceiveMessage);
 
+    // 4. Listen for Call Signals
+    const handleCallRequest = (data) => {
+      if (data.callerId !== currentUser.uid) {
+        setIncomingCall(data);
+      }
+    };
+
+    const handleCallAccepted = () => {
+      setOutboundCall(false);
+      setIsVideoCallOpen(true);
+    };
+
+    const handleCallRejected = () => {
+      setOutboundCall(false);
+      setIsVideoCallOpen(false);
+      setIncomingCall(null);
+    };
+
+    socket.on('webrtc_call_request', handleCallRequest);
+    socket.on('webrtc_call_accepted', handleCallAccepted);
+    socket.on('webrtc_call_rejected', handleCallRejected);
+
     // Cleanup
     return () => {
       socket.off('receive_message', handleReceiveMessage);
+      socket.off('webrtc_call_request', handleCallRequest);
+      socket.off('webrtc_call_accepted', handleCallAccepted);
+      socket.off('webrtc_call_rejected', handleCallRejected);
       socket.emit('leave_chat', activeChat.id);
     };
-  }, [activeChat?.id]);
+  }, [activeChat?.id, currentUser?.uid]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -229,6 +259,34 @@ const Chat = () => {
     } catch (err) {
       console.error("Error saving message:", err);
     }
+  };
+
+  const initiateCall = (otherUser) => {
+    setIsCaller(true);
+    setOutboundCall(true);
+    socket.emit('webrtc_call_request', {
+      chatId: activeChat.id,
+      callerId: currentUser.uid,
+      callerName: userData?.name || currentUser.displayName || 'Someone',
+      callerImage: currentUser.photoURL || fallbackImage
+    });
+  };
+
+  const acceptCall = () => {
+    setIsCaller(false);
+    setIsVideoCallOpen(true);
+    socket.emit('webrtc_call_accepted', { chatId: activeChat.id });
+    setIncomingCall(null);
+  };
+
+  const rejectCall = () => {
+    socket.emit('webrtc_call_rejected', { chatId: activeChat.id });
+    setIncomingCall(null);
+  };
+
+  const cancelCall = () => {
+    socket.emit('webrtc_call_rejected', { chatId: activeChat.id }); // Use rejected to stop ringing on the other side
+    setOutboundCall(false);
   };
 
   const formatTime = (timestamp) => {
@@ -437,14 +495,79 @@ const Chat = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="p-3 rounded-xl glass hover:bg-white/10 text-white transition-colors">
-                        <Phone size={18} />
+                      <motion.button 
+                        whileHover={{ scale: 1.1 }} 
+                        whileTap={{ scale: 0.9 }} 
+                        onClick={() => initiateCall(otherUser)}
+                        disabled={isVideoCallOpen || outboundCall || incomingCall}
+                        className={`p-3 rounded-xl glass transition-colors ${(isVideoCallOpen || outboundCall) ? 'bg-brand/50 text-white border-brand/50 cursor-not-allowed' : 'hover:bg-white/10 text-white'}`}
+                      >
+                        <Video size={18} />
                       </motion.button>
                       <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="p-3 rounded-xl glass hover:bg-white/10 text-white transition-colors">
                         <MoreVertical size={18} />
                       </motion.button>
                     </div>
                   </div>
+
+                  {/* Outbound Call (Ringing) Area */}
+                  {outboundCall && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }} 
+                      animate={{ opacity: 1, height: 384 }} 
+                      exit={{ opacity: 0, height: 0 }}
+                      className="w-full border-b border-white/5 bg-black/80 backdrop-blur-xl relative z-20 flex flex-col items-center justify-center overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-brand/10 animate-pulse" />
+                      <div className="w-24 h-24 rounded-full overflow-hidden mb-6 relative z-10 border-4 border-white/10 shadow-[0_0_50px_rgba(225,29,72,0.3)]">
+                        <img src={otherUser.image || fallbackImage} alt={otherUser.name} className="w-full h-full object-cover" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-white mb-2 relative z-10">Calling {otherUser.name}...</h3>
+                      <p className="text-white/50 mb-8 relative z-10 animate-pulse">Waiting for answer</p>
+                      
+                      <button onClick={cancelCall} className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:scale-110 relative z-10">
+                        <Phone size={24} className="rotate-[135deg]" />
+                      </button>
+                    </motion.div>
+                  )}
+
+                  {/* Incoming Call Area */}
+                  {incomingCall && !isVideoCallOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }} 
+                      animate={{ opacity: 1, scale: 1 }} 
+                      className="absolute inset-0 z-50 bg-black/90 backdrop-blur-3xl flex flex-col items-center justify-center"
+                    >
+                      <div className="absolute inset-0 bg-brand/20 animate-ping opacity-20" style={{ animationDuration: '2s' }} />
+                      
+                      <div className="w-32 h-32 rounded-full overflow-hidden mb-6 relative z-10 border-4 border-brand/50 shadow-[0_0_100px_rgba(225,29,72,0.5)]">
+                        <img src={incomingCall.callerImage} alt={incomingCall.callerName} className="w-full h-full object-cover" />
+                      </div>
+                      
+                      <h2 className="text-4xl font-black text-white mb-2 relative z-10 tracking-tight">{incomingCall.callerName}</h2>
+                      <p className="text-brand-light text-xl font-medium mb-12 relative z-10 animate-pulse">Incoming Video Call...</p>
+                      
+                      <div className="flex items-center gap-8 relative z-10">
+                        <button onClick={rejectCall} className="w-16 h-16 bg-red-500 rounded-full flex flex-col items-center justify-center text-white hover:bg-red-600 transition-colors shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:scale-110 group">
+                          <Phone size={24} className="rotate-[135deg] mb-1" />
+                        </button>
+                        <button onClick={acceptCall} className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center text-white hover:bg-green-600 transition-colors shadow-[0_0_40px_rgba(34,197,94,0.6)] hover:scale-110 animate-bounce">
+                          <Video size={32} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Video Call Area */}
+                  {isVideoCallOpen && (
+                    <WebRTCVideoCall 
+                      socket={socket} 
+                      chatId={activeChat.id} 
+                      currentUserId={currentUser.uid} 
+                      isCaller={isCaller}
+                      onClose={() => setIsVideoCallOpen(false)} 
+                    />
+                  )}
 
                   {/* Messages Area */}
                   <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar flex flex-col relative z-10">

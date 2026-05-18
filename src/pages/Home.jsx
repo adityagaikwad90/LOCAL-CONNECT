@@ -167,13 +167,6 @@ const Home = () => {
                 </button>
               </Link>
             </Magnetic>
-            <Magnetic strength={0.2}>
-              <Link to="/register">
-                <button className="px-12 py-5 rounded-full glass border border-white/30 bg-white/5 text-white font-bold text-lg hover:bg-white/20 hover:border-white/50 transition-all duration-300 flex items-center gap-2 shadow-[0_0_30px_rgba(0,0,0,0.2)]">
-                  <PlayCircle size={20} /> Watch Demo
-                </button>
-              </Link>
-            </Magnetic>
           </motion.div>
         </motion.div>
       </section>

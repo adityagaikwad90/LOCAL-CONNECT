@@ -38,8 +38,35 @@ io.on('connection', (socket) => {
     // data should contain { chatId, message: { id, senderId, text, createdAt, ... } }
     console.log(`Message received in room ${data.chatId}:`, data.message.text);
 
-    // Broadcast the message to everyone in the room EXCEPT the sender
+  // Broadcast the message to everyone in the room EXCEPT the sender
     socket.to(data.chatId).emit('receive_message', data.message);
+  });
+
+  socket.on('webrtc_call_request', (data) => {
+    socket.to(data.chatId).emit('webrtc_call_request', data);
+  });
+
+  socket.on('webrtc_call_accepted', (data) => {
+    socket.to(data.chatId).emit('webrtc_call_accepted', data);
+  });
+
+  socket.on('webrtc_call_rejected', (data) => {
+    socket.to(data.chatId).emit('webrtc_call_rejected', data);
+  });
+
+  socket.on('webrtc_offer', (data) => {
+    // data should contain { chatId, offer, senderId }
+    socket.to(data.chatId).emit('webrtc_offer', data);
+  });
+
+  socket.on('webrtc_answer', (data) => {
+    // data should contain { chatId, answer, senderId }
+    socket.to(data.chatId).emit('webrtc_answer', data);
+  });
+
+  socket.on('webrtc_ice_candidate', (data) => {
+    // data should contain { chatId, candidate, senderId }
+    socket.to(data.chatId).emit('webrtc_ice_candidate', data);
   });
 
   socket.on('disconnect', () => {
