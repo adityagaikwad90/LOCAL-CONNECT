@@ -80,29 +80,28 @@ const AIAssistant = () => {
     <>
       {/* Floating Action Button */}
       <motion.button
-        className={`fixed bottom-8 right-8 z-50 flex items-center justify-center p-4 rounded-full shadow-[0_0_20px_rgba(139,92,246,0.5)] backdrop-blur-md border border-white/30 transition-all duration-300 group ${
+        className={`fixed bottom-8 right-8 z-50 flex items-center justify-center p-4 rounded-full shadow-[0_0_30px_rgba(139,92,246,0.6)] backdrop-blur-2xl border border-white/20 transition-all duration-500 group ${
           isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
-        } bg-gradient-to-r from-brand via-purple-500 to-vibrant-indigo text-white hover:shadow-[0_0_30px_rgba(139,92,246,0.8)]`}
-        animate={{ y: [0, -10, 0] }}
-        transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-        whileHover={{ scale: 1.1 }}
+        } bg-gradient-to-br from-brand via-vibrant-indigo to-accent text-white hover:shadow-[0_0_50px_rgba(139,92,246,1)] animate-floatOrb`}
+        whileHover={{ scale: 1.15 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(true)}
       >
-        {/* Glow effect behind the button */}
-        <div className="absolute inset-0 rounded-full bg-white/20 blur-xl animate-pulse transition-colors"></div>
+        {/* Glow & Liquid effect behind the button */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-brand to-accent opacity-50 blur-xl animate-pulseGlow transition-opacity duration-500"></div>
+        <div className="absolute inset-0 rounded-full border border-white/40 group-hover:scale-110 transition-transform duration-500"></div>
         
         {/* Tooltip */}
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 text-brand px-3 py-1.5 rounded-xl text-sm font-bold shadow-lg opacity-0 group-hover:opacity-100 group-hover:-translate-y-2 transition-all duration-300 whitespace-nowrap pointer-events-none border border-white/50 backdrop-blur-sm">
+        <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-white text-black px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider shadow-[0_0_20px_rgba(255,255,255,0.4)] opacity-0 group-hover:opacity-100 group-hover:-translate-y-2 transition-all duration-500 whitespace-nowrap pointer-events-none border border-white/50 backdrop-blur-md">
           Ask AI ✨
         </div>
 
         <div className="relative z-10 flex items-center justify-center">
-          <Bot size={32} className="drop-shadow-lg" />
+          <Bot size={32} className="drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] group-hover:scale-110 transition-transform duration-500" />
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-            className="absolute -top-2 -right-2 text-yellow-300"
+            transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
+            className="absolute -top-2 -right-2 text-accent-light drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]"
           >
             <Sparkles size={16} />
           </motion.div>
@@ -119,25 +118,26 @@ const AIAssistant = () => {
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-32px)] h-[600px] max-h-[calc(100vh-100px)] flex flex-col"
           >
-            <GlassCard className="p-0 flex flex-col h-full overflow-hidden border-white/20 shadow-2xl shadow-black/50">
+            <GlassCard className="p-0 flex flex-col h-full overflow-hidden border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] bg-black/60 rounded-[2.5rem]">
               {/* Header */}
-              <div className="bg-gradient-to-r from-brand/80 to-vibrant-indigo/80 backdrop-blur-xl p-4 flex justify-between items-center border-b border-white/10 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/20 rounded-full">
-                    <Bot size={20} className="text-white" />
+              <div className="bg-gradient-to-r from-brand/20 to-vibrant-indigo/20 backdrop-blur-3xl p-5 flex justify-between items-center border-b border-white/10 shrink-0 relative overflow-hidden">
+                <div className="absolute inset-0 bg-white/5 noise-bg" />
+                <div className="flex items-center gap-4 relative z-10">
+                  <div className="p-2.5 bg-gradient-to-br from-brand to-accent rounded-xl shadow-[0_0_15px_rgba(225,29,72,0.4)]">
+                    <Bot size={22} className="text-white" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm">AI Travel Assistant</h3>
-                    <p className="text-white/60 text-xs flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-green-400"></span> Online
+                    <h3 className="text-white font-black tracking-wide">AI Travel Assistant</h3>
+                    <p className="text-brand-light text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand-light animate-pulse"></span> Online
                     </p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/70 hover:text-white"
+                  className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white border border-white/10 relative z-10"
                 >
-                  <X size={20} />
+                  <X size={18} />
                 </button>
               </div>
 
@@ -207,22 +207,23 @@ const AIAssistant = () => {
               </div>
 
               {/* Input Area */}
-              <div className="p-4 bg-black/40 border-t border-white/10 backdrop-blur-xl shrink-0">
+              <div className="p-5 bg-black/60 border-t border-white/5 backdrop-blur-2xl shrink-0">
                 <form onSubmit={handleSendMessage} className="relative flex items-center">
+                  <div className="absolute inset-0 bg-gradient-to-r from-brand/10 to-vibrant-indigo/10 blur-md rounded-full pointer-events-none" />
                   <input
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Ask me anything..."
                     disabled={isLoading}
-                    className="w-full bg-white/5 border border-white/10 rounded-full py-3 pl-4 pr-12 text-sm text-white placeholder-white/40 focus:outline-none focus:border-brand/50 focus:bg-white/10 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-full py-4 pl-6 pr-14 text-[15px] text-white placeholder-white/30 focus:outline-none focus:border-brand/40 focus:bg-white/10 transition-all shadow-inner relative z-10"
                   />
                   <button 
                     type="submit"
                     disabled={!inputValue.trim() || isLoading}
-                    className="absolute right-2 p-2 rounded-full bg-brand/80 text-white hover:bg-brand disabled:opacity-50 disabled:hover:bg-brand/80 transition-colors"
+                    className="absolute right-2 p-3 rounded-full bg-gradient-to-tr from-brand to-vibrant-pink text-white hover:scale-105 disabled:scale-100 disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(225,29,72,0.4)] z-20"
                   >
-                    {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                    {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                   </button>
                 </form>
               </div>

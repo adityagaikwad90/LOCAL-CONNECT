@@ -43,70 +43,86 @@ const Navbar = () => {
       }`}
     >
       <div className="w-full max-w-5xl px-4">
-        <div className={`rounded-full p-2 px-6 flex items-center justify-between transition-all duration-500 border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl ${
-          isScrolled ? 'bg-black/60' : 'bg-white/10'
+        <div className={`rounded-[2rem] p-2.5 px-6 flex items-center justify-between transition-all duration-500 border shadow-2xl backdrop-blur-3xl ${
+          isScrolled ? 'bg-black/20 border-white/10' : 'bg-black/10 border-white/5'
         }`}>
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand to-accent-light flex items-center justify-center text-white shadow-lg shadow-brand/40 group-hover:scale-110 group-hover:shadow-accent/40 transition-all duration-300">
-              <Compass size={24} />
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand via-vibrant-pink to-accent-light flex items-center justify-center text-white shadow-[0_0_20px_rgba(225,29,72,0.4)] group-hover:shadow-[0_0_40px_rgba(225,29,72,0.6)] group-hover:scale-105 transition-all duration-500 relative">
+              <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <Compass size={22} className="relative z-10 group-hover:rotate-45 transition-transform duration-700" />
             </div>
             <span className="text-xl font-bold text-white tracking-tight hidden sm:block">
-              Local<span className="text-accent-light drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">Connect</span>
+              Local<span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-light to-vibrant-pink animate-gradient-x drop-shadow-[0_0_10px_rgba(244,114,182,0.5)]">Connect</span>
             </span>
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-2">
-            {navLinks.map((link) => (
-              <Magnetic key={link.path} strength={0.2}>
-                <Link 
-                  to={link.path}
-                  className={`group flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
-                    isActive(link.path) 
-                      ? 'bg-gradient-to-r from-brand to-brand-dark text-white shadow-[0_0_15px_rgba(225,29,72,0.4)] border border-brand-light/30' 
-                      : 'text-white/70 hover:text-white hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]'
-                  }`}
-                >
-                  <div className={`${isActive(link.path) ? 'text-white' : 'text-white/50 group-hover:text-white'}`}>
-                    {link.icon}
-                  </div>
-                  {link.name}
-                </Link>
-              </Magnetic>
-            ))}
-            <div className="w-px h-6 bg-white/10 mx-3" />
+          <div className="hidden md:flex items-center gap-1.5 ml-8">
+            {navLinks.map((link) => {
+              const active = isActive(link.path);
+              return (
+                <Magnetic key={link.path} strength={0.15}>
+                  <Link 
+                    to={link.path}
+                    className={`relative group flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold tracking-wide uppercase transition-all duration-300 ${
+                      active 
+                        ? 'text-white' 
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {active && (
+                      <motion.div 
+                        layoutId="navbar-active"
+                        className="absolute inset-0 bg-white/10 rounded-full border border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-2">
+                      <div className={`${active ? 'text-brand-light drop-shadow-[0_0_8px_rgba(251,113,133,0.8)]' : 'text-white/40 group-hover:text-white/80'}`}>
+                        {link.icon}
+                      </div>
+                      {link.name}
+                    </span>
+                  </Link>
+                </Magnetic>
+              );
+            })}
+          </div>
+          
+          <div className="hidden md:flex items-center gap-2 ml-auto">
+            <div className="w-px h-6 bg-white/10 mx-2" />
             {currentUser ? (
               <>
                 <NotificationsMenu currentUser={currentUser} />
                 <Magnetic strength={0.2}>
-                  <Link to="/profile" className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-200 ${
+                  <Link to="/profile" className={`flex items-center gap-2 px-5 py-2.5 rounded-full transition-all duration-300 ${
                     isActive('/profile') 
-                      ? 'bg-white/20 text-white shadow-lg shadow-black/5' 
-                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                      ? 'bg-white/10 text-white border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)]' 
+                      : 'text-white/70 hover:text-white hover:bg-white/5'
                   }`}>
-                    <User size={18} />
-                    <span className="font-medium">{userData?.name || currentUser.displayName || 'Profile'}</span>
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand to-vibrant-pink flex items-center justify-center text-xs font-bold text-white shadow-[0_0_10px_rgba(225,29,72,0.5)]">
+                      {userData?.name?.charAt(0) || currentUser.displayName?.charAt(0) || <User size={12} />}
+                    </div>
+                    <span className="font-bold text-[13px] tracking-wide">{userData?.name?.split(' ')[0] || 'Profile'}</span>
                   </Link>
                 </Magnetic>
                 <Magnetic strength={0.2}>
-                  <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-colors ml-1">
-                    <LogOut size={18} />
-                    <span className="font-medium">Logout</span>
+                  <button onClick={handleLogout} className="flex items-center gap-2 p-2.5 rounded-full text-white/40 hover:text-brand-light hover:bg-brand/10 transition-colors ml-1">
+                    <LogOut size={16} />
                   </button>
                 </Magnetic>
               </>
             ) : (
               <>
                 <Magnetic strength={0.2}>
-                  <Link to="/login" className="flex items-center gap-2 px-5 py-2.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors font-medium">
-                    <User size={18} />
+                  <Link to="/login" className="flex items-center gap-2 px-6 py-2.5 rounded-full text-white/70 hover:text-white hover:bg-white/5 transition-colors font-bold text-[13px] uppercase tracking-wide">
                     <span>Login</span>
                   </Link>
                 </Magnetic>
                 <Magnetic strength={0.2}>
-                  <Link to="/register" className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-brand to-vibrant-pink text-white hover:shadow-[0_0_20px_rgba(225,29,72,0.6)] hover:-translate-y-0.5 transition-all duration-300 ml-2 font-bold border border-white/20">
-                    <span>Sign Up</span>
+                  <Link to="/register" className="liquid-button flex items-center gap-2 px-7 py-2.5 rounded-full bg-white text-black hover:scale-105 transition-all duration-500 ml-2 font-black text-[13px] uppercase tracking-wider shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                    <span className="relative z-10">Sign Up</span>
                   </Link>
                 </Magnetic>
               </>

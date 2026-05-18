@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Search, MapPin, Star, ShieldCheck, Zap, Users, ArrowRight } from 'lucide-react';
+import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { Search, MapPin, Star, ShieldCheck, Zap, Users, ArrowRight, PlayCircle, Globe, Sparkles } from 'lucide-react';
 import { trendingCities as mockTrendingCities, testimonials } from '../data/mockData';
 import { GlassCard, GlassButton, Badge, Magnetic } from '../components/common/UIComponents';
 import CursorGlow from '../components/common/CursorGlow';
@@ -12,9 +12,21 @@ const Home = () => {
   const navigate = useNavigate();
   const [trendingCities, setTrendingCities] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const containerRef = useRef(null);
 
   const { scrollYProgress } = useScroll();
-  const yText = useTransform(scrollYProgress, [0, 1], [0, -100]);
+  const yText = useTransform(scrollYProgress, [0, 1], [0, -150]);
+  const opacityText = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
+  };
+
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 40 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 20 } }
+  };
 
   useEffect(() => {
     const fetchLocalsCount = async () => {
@@ -44,81 +56,121 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen bg-[#050510] overflow-hidden selection:bg-brand selection:text-white" ref={containerRef}>
       <CursorGlow />
-      {/* Background Animated Blobs */}
-      <div className="absolute top-0 left-0 w-full h-screen overflow-hidden -z-10 pointer-events-none">
+      
+      {/* Animated Mesh Gradient, Noise, & Grid Overlay */}
+      <div className="fixed inset-0 z-0 mesh-gradient-bg pointer-events-none" />
+      <div className="fixed inset-0 z-0 grid-overlay opacity-[0.2] pointer-events-none" />
+      <div className="fixed inset-0 z-0 noise-bg opacity-[0.1] pointer-events-none mix-blend-overlay" />
+      
+      {/* Vibrant Floating Ambient Orbs */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none mix-blend-screen opacity-80">
         <motion.div 
-          animate={{ x: [0, 100, 0], y: [0, -50, 0] }}
-          transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-          className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-brand/20 blur-[120px]" 
+          animate={{ x: [0, 100, 0], y: [0, -100, 0], scale: [1, 1.3, 1] }}
+          transition={{ repeat: Infinity, duration: 20, ease: "easeInOut" }}
+          className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-brand/30 blur-[150px]" 
         />
         <motion.div 
-          animate={{ x: [0, -100, 0], y: [0, 100, 0] }}
-          transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
-          className="absolute top-[20%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-vibrant-pink/20 blur-[100px]" 
+          animate={{ x: [0, -150, 0], y: [0, 150, 0], scale: [1, 1.4, 1] }}
+          transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
+          className="absolute top-[20%] right-[-20%] w-[50vw] h-[50vw] rounded-full bg-vibrant-orange/20 blur-[180px]" 
         />
         <motion.div 
-          animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-          className="absolute top-[15%] left-[10%] w-32 h-32 bg-accent/10 blur-3xl rounded-full"
+          animate={{ y: [0, -50, 0], x: [0, 50, 0], rotate: [0, 15, 0] }}
+          transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
+          className="absolute bottom-[-10%] right-[10%] w-[45vw] h-[45vw] bg-vibrant-pink/20 blur-[150px] rounded-full"
         />
         <motion.div 
-          animate={{ y: [0, 30, 0], rotate: [0, -15, 0] }}
-          transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }}
-          className="absolute bottom-[20%] right-[15%] w-48 h-48 bg-brand/10 blur-3xl rounded-full"
+          animate={{ y: [0, 50, 0], x: [0, -50, 0] }}
+          transition={{ repeat: Infinity, duration: 18, ease: "easeInOut" }}
+          className="absolute top-[40%] left-[-10%] w-[35vw] h-[35vw] bg-accent/20 blur-[130px] rounded-full"
         />
       </div>
 
       {/* Hero Section */}
-      <section className="relative container mx-auto px-4 pt-40 pb-24 text-center">
-        <motion.div style={{ y: yText }} className="max-w-4xl mx-auto z-10 relative">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="mb-8 flex justify-center"
-          >
-            <Badge variant="accent" className="bg-brand/10 text-brand-light border-brand/20 px-4 py-2 text-sm backdrop-blur-md">
-              <Zap size={14} className="inline mr-1" /> Experience the World Authentically
-            </Badge>
+      <section className="relative container mx-auto px-4 pt-48 pb-32 text-center z-10 min-h-screen flex items-center justify-center">
+        {/* Floating Mini Cards */}
+        <motion.div 
+          animate={{ y: [0, -15, 0], rotate: [0, 2, 0] }}
+          transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+          className="hidden lg:flex absolute top-[25%] left-[5%] glass px-5 py-3 rounded-2xl border-white/20 items-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] backdrop-blur-2xl"
+        >
+          <div className="p-2 bg-gradient-to-br from-brand to-accent rounded-full"><Star size={16} className="text-white fill-white" /></div>
+          <div className="text-left">
+            <p className="text-white font-black leading-tight">4.9/5</p>
+            <p className="text-white/60 text-xs font-semibold">Average Rating</p>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          animate={{ y: [0, 20, 0], rotate: [0, -3, 0] }}
+          transition={{ repeat: Infinity, duration: 8, ease: "easeInOut", delay: 1 }}
+          className="hidden lg:flex absolute bottom-[20%] left-[10%] glass px-5 py-3 rounded-2xl border-white/20 items-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] backdrop-blur-2xl"
+        >
+          <div className="p-2 bg-gradient-to-br from-vibrant-orange to-vibrant-pink rounded-full"><Globe size={16} className="text-white" /></div>
+          <div className="text-left">
+            <p className="text-white font-black leading-tight">120+</p>
+            <p className="text-white/60 text-xs font-semibold">Active Cities</p>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          animate={{ y: [0, -25, 0], rotate: [0, -2, 0] }}
+          transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 2 }}
+          className="hidden lg:flex absolute top-[30%] right-[5%] glass px-5 py-3 rounded-2xl border-white/20 items-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] backdrop-blur-2xl"
+        >
+          <div className="flex -space-x-2">
+            <div className="w-8 h-8 rounded-full border-2 border-[#12121a] bg-brand flex items-center justify-center text-xs font-bold text-white">A</div>
+            <div className="w-8 h-8 rounded-full border-2 border-[#12121a] bg-vibrant-indigo flex items-center justify-center text-xs font-bold text-white">S</div>
+            <div className="w-8 h-8 rounded-full border-2 border-[#12121a] bg-accent flex items-center justify-center text-xs font-bold text-white">+</div>
+          </div>
+          <div className="text-left ml-2">
+            <p className="text-white font-black leading-tight">Verified</p>
+            <p className="text-white/60 text-xs font-semibold">Local Guides</p>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          style={{ y: yText, opacity: opacityText }} 
+          className="max-w-5xl mx-auto relative z-10"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="show"
+        >
+          <motion.div variants={fadeInUp} className="mb-10 flex justify-center">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass border border-white/30 bg-white/10 backdrop-blur-3xl shadow-[0_0_40px_rgba(255,255,255,0.15)]">
+              <Sparkles size={16} className="text-accent-light animate-pulse" /> 
+              <span className="text-sm font-bold tracking-wider text-white uppercase">The new era of travel</span>
+            </div>
           </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-6xl md:text-8xl font-black text-white mb-8 tracking-tighter leading-[1.1]"
-          >
+          
+          <motion.h1 variants={fadeInUp} className="text-6xl md:text-8xl lg:text-[7.5rem] font-black text-white mb-8 tracking-tighter leading-[1.05] drop-shadow-[0_0_40px_rgba(0,0,0,0.5)]">
             Explore Cities with <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-light via-vibrant-orange to-accent-light animate-gradient-x drop-shadow-[0_0_30px_rgba(244,114,182,0.3)]">
-              Trusted Locals
+            <span className="relative inline-block mt-2">
+              <span className="absolute -inset-4 bg-gradient-to-r from-brand via-vibrant-orange to-accent-light blur-3xl opacity-50 animate-pulseGlow rounded-full"></span>
+              <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/70">
+                Trusted Locals
+              </span>
             </span>
           </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-white/60 text-xl md:text-2xl max-w-2xl mx-auto mb-12 font-light"
-          >
-            Skip the tourist traps. Connect with verified residents who share your interests for personalized guidance.
+          
+          <motion.p variants={fadeInUp} className="text-white/80 text-xl md:text-2xl max-w-2xl mx-auto mb-14 font-medium leading-relaxed drop-shadow-md">
+            Skip the tourist traps. Experience authentic culture, hidden gems, and unforgettable moments with verified residents.
           </motion.p>
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-wrap justify-center gap-6"
-          >
-            <Magnetic strength={0.3}>
+          
+          <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row justify-center items-center gap-6">
+            <Magnetic strength={0.2}>
               <Link to="/explore">
-                <button className="px-8 py-4 rounded-full bg-gradient-to-r from-brand to-vibrant-pink text-white font-bold text-lg shadow-[0_0_30px_rgba(225,29,72,0.5)] hover:shadow-[0_0_50px_rgba(225,29,72,0.8)] transition-all duration-300">
-                  Explore Now
+                <button className="liquid-button px-12 py-5 rounded-full bg-white text-black font-black text-lg hover:scale-105 transition-transform duration-500 shadow-[0_0_50px_rgba(255,255,255,0.6)] flex items-center gap-2 group">
+                  Start Exploring <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </button>
               </Link>
             </Magnetic>
-            <Magnetic strength={0.3}>
+            <Magnetic strength={0.2}>
               <Link to="/register">
-                <button className="px-8 py-4 rounded-full glass border border-white/20 text-white font-bold text-lg hover:bg-white/10 transition-all duration-300">
-                  Become a Local
+                <button className="px-12 py-5 rounded-full glass border border-white/30 bg-white/5 text-white font-bold text-lg hover:bg-white/20 hover:border-white/50 transition-all duration-300 flex items-center gap-2 shadow-[0_0_30px_rgba(0,0,0,0.2)]">
+                  <PlayCircle size={20} /> Watch Demo
                 </button>
               </Link>
             </Magnetic>
@@ -126,67 +178,65 @@ const Home = () => {
         </motion.div>
       </section>
 
-      {/* Trending Cities (Horizontal Scroll + 3D Tilt + Shimmer) */}
+      {/* Trending Cities Showcase */}
       <motion.section 
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8 }}
-        className="container mx-auto px-4 py-20"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 1 }}
+        className="relative z-10 container mx-auto px-4 py-32"
       >
-        <div className="flex justify-between items-end mb-12">
-          <div>
-            <h2 className="text-4xl font-bold text-white mb-2">Trending Cities</h2>
-            <p className="text-white/50 text-lg">Most popular destinations this month</p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+          <div className="max-w-2xl">
+            <h2 className="text-5xl md:text-6xl font-black text-white mb-4 tracking-tight drop-shadow-lg">Trending Destinations</h2>
+            <p className="text-white/50 text-xl font-medium">Discover where our community is heading next.</p>
           </div>
-          <Link to="/explore" className="text-brand-light hover:text-white transition-colors font-medium flex items-center gap-1 group">
-            View all cities <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+          <Link to="/explore" className="text-white font-bold flex items-center gap-2 group px-6 py-3 rounded-full glass hover:bg-white/10 transition-all">
+            View all <Globe size={18} className="group-hover:rotate-45 transition-transform duration-500" />
           </Link>
         </div>
 
-        <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory scrollbar-hide">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {isLoading 
             ? Array(4).fill(0).map((_, i) => (
-                <div key={i} className="min-w-[280px] md:min-w-[320px] aspect-[4/5] rounded-3xl bg-white/5 border border-white/5 animate-shimmer snap-center shrink-0"></div>
+                <div key={i} className="aspect-[3/4] rounded-[2.5rem] bg-white/5 border border-white/5 animate-shimmer"></div>
               ))
-            : trendingCities.map((city, idx) => (
+            : trendingCities.slice(0, 4).map((city, idx) => (
               <motion.div
                 key={city.id}
-                whileHover={{ scale: 1.03, rotateY: 5, rotateX: -5 }}
-                className="min-w-[280px] md:min-w-[320px] snap-center shrink-0"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: idx * 0.1 }}
+                whileHover={{ scale: 1.02, rotateY: 5, rotateX: -5, zIndex: 10 }}
+                className="group relative cursor-pointer"
                 style={{ perspective: 1000 }}
+                onClick={() => navigate(`/city/${city.name}`)}
               >
-                <GlassCard
-                  className="group cursor-pointer p-0 overflow-hidden border-none aspect-[4/5] relative h-full shadow-2xl hover:shadow-[0_0_30px_rgba(225,29,72,0.3)] transition-all duration-500"
-                  onClick={() => navigate(`/city/${city.name}`)}
-                >
+                <div className="absolute -inset-1 bg-gradient-to-r from-brand to-accent opacity-0 group-hover:opacity-40 blur-xl transition-opacity duration-500 rounded-[3rem]" />
+                <GlassCard className="relative p-0 overflow-hidden border border-white/10 rounded-[2.5rem] aspect-[3/4] h-full shadow-2xl transition-all duration-500 bg-black">
                   <img
                     src={city.image}
                     alt={city.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 flex flex-col justify-end">
-                    <Badge variant="accent" className="w-fit mb-3 bg-white/20 backdrop-blur-md border-white/30 text-white shadow-lg">{city.country}</Badge>
-                    <h3 className="text-3xl font-bold text-white mb-2 drop-shadow-md">{city.name}</h3>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {city.topPlaces && city.topPlaces.slice(0, 2).map((place, i) => (
-                        <span key={i} className="text-xs bg-white/10 backdrop-blur-md text-white/80 px-2 py-1 rounded-md border border-white/10">
-                          {place}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-8 flex flex-col justify-end">
+                    <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                      <Badge variant="accent" className="w-fit mb-4 bg-white/20 backdrop-blur-xl border-white/30 text-white shadow-lg">{city.country}</Badge>
+                      <h3 className="text-4xl font-bold text-white mb-3 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]">{city.name}</h3>
+                      <div className="flex items-center gap-4 text-white/90 text-sm mb-6 font-semibold">
+                        <span className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10">
+                          <Users size={14} className="text-white" /> {city.localsCount} locals
                         </span>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/10">
-                      <div className="flex items-center gap-4 text-white/70 text-sm">
-                        <span className="flex items-center gap-1">
-                          <Users size={16} className="text-brand-light" /> <span className="font-medium text-white">{city.localsCount}</span>
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Star size={16} className="text-accent-light fill-accent-light" /> <span className="font-medium text-white">{city.rating}</span>
+                        <span className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10">
+                          <Star size={14} className="text-yellow-300 fill-yellow-300" /> {city.rating}
                         </span>
                       </div>
-                      <button className="bg-brand hover:bg-brand-light text-white px-4 py-1.5 rounded-full text-sm font-bold transition-colors shadow-lg">
-                        Connect
-                      </button>
+                      <div className="h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-500 overflow-hidden">
+                        <button className="w-full bg-gradient-to-r from-white to-white/90 text-black py-3 rounded-xl font-black hover:scale-[1.02] transition-transform shadow-[0_0_20px_rgba(255,255,255,0.4)]">
+                          Explore City
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </GlassCard>
@@ -195,99 +245,91 @@ const Home = () => {
         </div>
       </motion.section>
 
-
-      {/* How it Works (Animated Steps) */}
-      <section className="container mx-auto px-4 py-20 relative">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand/10 blur-[100px] rounded-full -z-10" />
-        
-        <div className="text-center mb-20">
-          <h2 className="text-4xl font-bold text-white mb-4">How it Works</h2>
-          <p className="text-white/50 max-w-xl mx-auto text-lg">Three simple steps to experience your next destination like a true local.</p>
+      {/* How it Works */}
+      <section className="relative z-10 container mx-auto px-4 py-32 border-t border-white/5">
+        <div className="text-center mb-24">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-5xl md:text-6xl font-black text-white mb-6"
+          >
+            How it Works
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-white/50 max-w-2xl mx-auto text-xl font-medium"
+          >
+            Three simple steps to experience your next destination like a true local, powered by our secure platform.
+          </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative max-w-5xl mx-auto">
-          {/* Connecting Line (Desktop) */}
-          <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-transparent via-white/20 to-transparent -z-10" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative max-w-6xl mx-auto">
+          {/* Connecting Line */}
+          <div className="hidden md:block absolute top-16 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-brand/50 to-transparent -z-10" />
 
           {[
-            { icon: Search, title: 'Find your guide', text: 'Browse verified locals based on your destination and shared interests.' },
-            { icon: ShieldCheck, title: 'Connect safely', text: 'Chat with locals, ask questions, and book your experience through our secure platform.' },
-            { icon: MapPin, title: 'Explore together', text: 'Meet your guide and discover hidden gems and stories away from the crowds.' }
+            { icon: Search, title: 'Discover', text: 'Browse verified locals based on your destination, interests, and preferred language.' },
+            { icon: ShieldCheck, title: 'Connect', text: 'Chat securely through our platform to plan your personalized itinerary.' },
+            { icon: MapPin, title: 'Experience', text: 'Meet up and explore hidden gems far away from the typical tourist crowds.' }
           ].map((step, idx) => (
             <motion.div 
               key={idx} 
               className="text-center group"
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: idx * 0.3, duration: 0.6 }}
+              transition={{ delay: idx * 0.2, duration: 0.8, type: "spring" }}
             >
-              <div className="w-24 h-24 rounded-[2rem] glass flex items-center justify-center mx-auto mb-8 border border-white/10 group-hover:bg-gradient-to-tr group-hover:from-brand group-hover:to-vibrant-pink group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500 shadow-[0_0_20px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(225,29,72,0.4)] relative">
-                <step.icon size={36} className="text-white relative z-10" />
-                {/* Glow ring */}
-                <div className="absolute inset-0 rounded-[2rem] bg-white/20 opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-500"></div>
+              <div className="w-32 h-32 rounded-[2.5rem] bg-white/5 backdrop-blur-xl flex items-center justify-center mx-auto mb-10 border border-white/20 group-hover:bg-white/10 group-hover:scale-110 group-hover:-translate-y-4 transition-all duration-500 shadow-[0_0_40px_rgba(255,255,255,0.05)] relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-tr from-brand/40 to-vibrant-orange/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <step.icon size={48} className="text-white relative z-10 group-hover:scale-110 transition-transform" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-4">{step.title}</h3>
-              <p className="text-white/50 leading-relaxed">{step.text}</p>
+              <h3 className="text-3xl font-bold text-white mb-4">{step.title}</h3>
+              <p className="text-white/70 leading-relaxed text-lg px-4">{step.text}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Testimonials (Infinite Marquee) */}
-      <section className="py-20 overflow-hidden relative">
-        <h2 className="text-4xl font-bold text-white text-center mb-16">What our Travelers Say</h2>
-        
-        {/* Gradients to fade edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#0a0a0a] to-transparent z-10"></div>
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#0a0a0a] to-transparent z-10"></div>
-
-        <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
-          {[...testimonials, ...testimonials, ...testimonials, ...testimonials].map((t, idx) => (
-            <div key={idx} className="w-[400px] shrink-0 px-4">
-              <GlassCard className="p-8 border-white/5 h-full relative overflow-hidden group">
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/10 rounded-full blur-2xl group-hover:bg-accent/20 transition-colors" />
-                <Star className="text-accent-light fill-accent-light mb-6 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" size={24} />
-                <p className="text-lg text-white/80 italic mb-8 leading-relaxed">"{t.text}"</p>
-                <div className="flex items-center gap-4 mt-auto">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-brand to-accent p-0.5 shadow-lg">
-                    <div className="w-full h-full bg-[#171717] rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      {t.author.charAt(0)}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-white font-bold">{t.author}</h4>
-                    <p className="text-brand-light text-sm">{t.role}</p>
-                  </div>
-                </div>
-              </GlassCard>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20 mb-20">
+      {/* Interactive CTA Section */}
+      <section className="relative z-10 container mx-auto px-4 py-32 mb-20">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="glass-dark rounded-[3rem] p-12 md:p-20 text-center border-brand/20 relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-3xl"
+          transition={{ duration: 1 }}
+          className="relative rounded-[4rem] p-16 md:p-24 text-center border border-white/20 overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.4)] backdrop-blur-3xl bg-white/5"
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-brand/10 to-transparent pointer-events-none" />
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight drop-shadow-md">Ready to see the world <br className="hidden md:block"/> differently?</h2>
-          <p className="text-white/60 mb-10 max-w-xl mx-auto text-lg leading-relaxed">Join thousands of travelers who are discovering cities through the eyes of the people who call them home.</p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/explore">
-              <button className="px-10 py-4 rounded-full bg-white text-black font-bold text-lg hover:bg-white/90 hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.4)]">
-                Start Exploring
-              </button>
-            </Link>
-            <Link to="/register">
-              <button className="px-10 py-4 rounded-full glass border border-white/20 text-white font-bold text-lg hover:bg-white/10 hover:scale-105 transition-all">
-                Become a Local
-              </button>
-            </Link>
+          {/* Internal Glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-3xl bg-gradient-to-r from-brand/40 via-vibrant-orange/40 to-vibrant-pink/40 blur-[120px] rounded-full pointer-events-none animate-pulseGlow" />
+          
+          <div className="relative z-10">
+            <h2 className="text-5xl md:text-7xl font-black text-white mb-8 leading-tight drop-shadow-xl">
+              Ready to see the world <br className="hidden md:block"/> differently?
+            </h2>
+            <p className="text-white/80 mb-12 max-w-2xl mx-auto text-xl leading-relaxed font-medium">
+              Join thousands of travelers discovering cities through the eyes of the people who call them home. Your next adventure awaits.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-6">
+              <Magnetic strength={0.2}>
+                <Link to="/explore">
+                  <button className="liquid-button px-12 py-5 rounded-full bg-white text-black font-black text-lg hover:scale-105 transition-all shadow-[0_0_40px_rgba(255,255,255,0.5)] w-full sm:w-auto">
+                    Start Exploring
+                  </button>
+                </Link>
+              </Magnetic>
+              <Magnetic strength={0.2}>
+                <Link to="/register">
+                  <button className="px-12 py-5 rounded-full glass border border-white/30 bg-white/10 text-white font-bold text-lg hover:bg-white/20 hover:border-white/50 hover:scale-105 transition-all w-full sm:w-auto shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                    Become a Local
+                  </button>
+                </Link>
+              </Magnetic>
+            </div>
           </div>
         </motion.div>
       </section>
