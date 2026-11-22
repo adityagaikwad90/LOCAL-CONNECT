@@ -1,15 +1,15 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 
-export const Badge = ({ children, variant = 'primary' }) => {
+export const Badge = ({ children, variant = 'primary', className = '' }) => {
   const variants = {
-    primary: 'bg-brand/20 text-brand-light border-brand/30',
-    accent: 'bg-accent/20 text-accent-light border-accent/30',
-    white: 'bg-white/10 text-white/80 border-white/20',
+    primary: 'bg-orange-200/10 text-orange-100 border-orange-200/20',
+    accent: 'bg-emerald-200/10 text-emerald-100 border-emerald-200/20',
+    white: 'bg-white/5 text-white/75 border-white/15',
   };
 
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${variants[variant]}`}>
+    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${variants[variant]} ${className}`}>
       {children}
     </span>
   );
@@ -17,13 +17,13 @@ export const Badge = ({ children, variant = 'primary' }) => {
 
 export const GlassCard = ({ children, className = '', hover = true, onClick, variant = 'light' }) => {
   const variants = {
-    light: 'bg-white/5 border-white/10',
-    dark: 'bg-black/60 border-white/5 shadow-2xl backdrop-blur-2xl',
+    light: 'bg-white/[0.04] border-white/10',
+    dark: 'bg-[#101920] border-white/10 shadow-xl',
   };
 
   return (
     <div 
-      className={`glass-card p-6 ${variants[variant]} ${!hover ? 'hover:transform-none' : ''} ${className}`}
+      className={`rounded-3xl border p-6 ${variants[variant]} ${hover ? 'transition-colors hover:border-white/20 hover:bg-white/[0.06]' : ''} ${className}`}
       onClick={onClick}
     >
       {children}
@@ -60,15 +60,15 @@ export const Magnetic = ({ children, strength = 0.5 }) => {
   );
 };
 
-export const GlassButton = ({ children, variant = 'primary', onClick, className = '' }) => {
+export const GlassButton = ({ children, variant = 'primary', onClick, className = '', ...props }) => {
   const variants = {
-    primary: 'glass-button-primary',
-    accent: 'glass-button-accent',
-    outline: 'border border-white/20 text-white hover:bg-white/10',
+    primary: 'button-secondary',
+    accent: 'button-primary',
+    outline: 'button-secondary',
   };
 
   return (
-    <button onClick={onClick} className={`${variants[variant]} ${className}`}>
+    <button onClick={onClick} className={`${variants[variant]} ${className}`} {...props}>
       {children}
     </button>
   );

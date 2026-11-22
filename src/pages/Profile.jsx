@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Star, MapPin, Globe, MessageSquare, Calendar, ShieldCheck, Heart, Share2, ArrowLeft, Users, User } from 'lucide-react';
-import { locals } from '../data/mockData';
 import { GlassCard, GlassButton, Badge } from '../components/common/UIComponents';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -9,17 +8,20 @@ import { trendingCities } from '../data/mockData';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
+import ConnectionRequestModal from '../components/connections/ConnectionRequestModal';
 
 const Profile = () => {
   const { id } = useParams();
   const { userData, currentUser, loading: authLoading } = useAuth();
   const [dbProfile, setDbProfile] = React.useState(null);
   const [dbLoading, setDbLoading] = React.useState(false);
+  const [requestOpen, setRequestOpen] = React.useState(false);
+  const [requestSent, setRequestSent] = React.useState(false);
   const navigate = useNavigate();
 
   React.useEffect(() => {
     const fetchProfile = async () => {
-      if (id && !locals.find(l => l.id === parseInt(id))) {
+      if (id) {
         setDbLoading(true);
         try {
           const docRef = doc(db, 'users', id);
@@ -62,7 +64,7 @@ const Profile = () => {
         interests: [],
         image: currentUser?.photoURL
       })
-    : (locals.find(l => l.id === parseInt(id)) || dbProfile || locals[0]);
+    : dbProfile;
 
   // If no profile data found (e.g. invalid ID), fallback or redirect
   if (!profileData) {
@@ -98,7 +100,7 @@ const Profile = () => {
                       <h1 className="text-4xl font-bold text-white tracking-tight">{profileData.name}</h1>
                       {profileData.role === 'local' && (
                         <Badge variant="accent" className="flex items-center gap-1">
-                          <ShieldCheck size={12} /> Verified
+                          <ShieldCheck size={12} /> Local Guide
                         </Badge>
                       )}
                       {isMyProfile && (
@@ -185,13 +187,7 @@ const Profile = () => {
                 About {profileData.name.split(' ')[0]}
               </h3>
               <GlassCard className="p-8 border-white/5 bg-white/5 leading-relaxed text-white/70">
-                <p className="text-lg italic mb-6">"{profileData.bio}"</p>
-                <p className="mb-4">
-                  "I believe that truly seeing a city means going beyond the monuments. While I love the icons, my passion is showing my guests the small details—the pastry shop that's been there for 60 years, the community art project in a back alley, or the best place to watch the sunset away from the crowds."
-                </p>
-                <p>
-                  Whether you're looking for a deep dive into urban history, a food tour of my favorite neighborhoods, or just someone to help navigate the subway and point you toward the soul of the city, I'm here to make your visit unforgettable.
-                </p>
+                <p className="text-lg leading-8">{profileData.bio || `${profileData.name.split(' ')[0]} is looking forward to sharing a local perspective on ${profileData.location || 'their city'}. Send a request to start planning together.`}</p>
               </GlassCard>
             </section>
           )}
@@ -201,27 +197,8 @@ const Profile = () => {
             <section>
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-2xl font-bold text-white flex items-center gap-3">Reviews</h3>
-                <button className="text-brand-light text-sm font-bold">Write a review</button>
               </div>
-              <div className="space-y-6">
-                {[1, 2].map(r => (
-                  <GlassCard key={r} className="p-6 border-white/5 bg-white/5">
-                    <div className="flex gap-4 mb-4">
-                      <div className="w-12 h-12 rounded-full bg-white/10" />
-                      <div>
-                        <h4 className="text-white font-bold">Reviewer {r}</h4>
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map(s => <Star key={s} size={10} className="fill-yellow-400 text-yellow-400" />)}
-                          <span className="text-white/30 text-[10px] ml-2 font-bold uppercase tracking-wider">2 weeks ago</span>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-white/60 text-sm leading-relaxed">
-                      "Had an absolutely amazing time with {profileData.name.split(' ')[0]}! We saw things we never would have found on our own. Highly recommend the sunset walking tour."
-                    </p>
-                  </GlassCard>
-                ))}
-              </div>
+              <GlassCard className="border-white/5 bg-white/5 p-6 text-white/55">Reviews will show here after travelers and local guides have completed experiences together.</GlassCard>
             </section>
           )}
         </div>
@@ -231,14 +208,20 @@ const Profile = () => {
           {profileData.role === 'local' && !isMyProfile && (
             <GlassCard className="p-8 border-brand/20 bg-brand/10 sticky top-32">
               <h3 className="text-2xl font-bold text-white mb-6">Connect with {profileData.name.split(' ')[0]}</h3>
-              <p className="text-white/50 text-sm mb-8">Ready to plan your experience? Send a request or chat now to discuss details.</p>
+              <p className="text-white/60 text-sm mb-8">Share a preferred date and a little about your trip. If the guide accepts, you can work out the details in chat.</p>
               
               <div className="space-y-4">
-                <GlassButton variant="accent" className="w-full py-4 text-lg">
+                  <GlassButton variant="accent" className="w-full py-4 text-lg" onClick={() => {
+                    if (!currentUser) {
+                      navigate('/login', { state: { from: window.location.pathname } });
+                    } else if (id && Number.isNaN(Number(id))) {
+                      setRequestOpen(true);
+                    }
+                  }}>
                   <Calendar size={20} />
-                  Send Connection Request
+                    {requestSent ? 'Request sent' : 'Plan an experience'}
                 </GlassButton>
-                <Link to="/chat" className="block">
+                <Link to={id ? `/chat/${id}` : '/chat'} className="block">
                   <GlassButton variant="outline" className="w-full py-4 text-lg">
                     <MessageSquare size={20} />
                     Chat Now
@@ -246,34 +229,24 @@ const Profile = () => {
                 </Link>
               </div>
 
-              <div className="mt-8 pt-8 border-t border-white/10 space-y-4">
-                <div className="flex items-center justify-between text-sm text-white/50">
-                  <span>Response Rate</span>
-                  <span className="text-white font-medium">98%</span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-white/50">
-                  <span>Response Time</span>
-                  <span className="text-white font-medium">&lt; 1 hour</span>
-                </div>
-              </div>
             </GlassCard>
           )}
 
           {profileData.role === 'local' && (
             <GlassCard className="p-8 border-white/5">
-              <h4 className="text-white font-bold mb-4">Why book with a local?</h4>
+              <h4 className="text-white font-bold mb-4">Plan with a local</h4>
               <ul className="space-y-4 text-sm text-white/50">
                 <li className="flex gap-3">
                   <ShieldCheck size={18} className="text-brand-light shrink-0" />
-                  Verified & Background Checked
+                  Talk directly with your guide
                 </li>
                 <li className="flex gap-3">
                   <Users size={18} className="text-brand-light shrink-0" />
-                  Personalized experiences
+                  Shape the plan around your interests
                 </li>
                 <li className="flex gap-3">
                   <Globe size={18} className="text-brand-light shrink-0" />
-                  Support local communities
+                  Discover the city through local knowledge
                 </li>
               </ul>
             </GlassCard>
@@ -281,16 +254,15 @@ const Profile = () => {
 
           {isMyProfile && (
             <GlassCard className="p-8 border-white/5 text-center">
-              <h4 className="text-white font-bold mb-4">Account Settings</h4>
-              <p className="text-white/50 text-sm mb-6">Manage your preferences and profile details.</p>
+              <h4 className="text-white font-bold mb-4">Your account</h4>
+              <p className="text-white/50 text-sm mb-6">Review your saved destinations and connection requests.</p>
 
-              <GlassButton variant="outline" className="w-full">
-                Edit Profile
-              </GlassButton>
+              <Link to="/dashboard" className="button-secondary w-full">Open my space</Link>
             </GlassCard>
           )}
         </div>
       </div>
+      {requestOpen && <ConnectionRequestModal guide={{ ...profileData, id }} onClose={(sent) => { setRequestOpen(false); if (sent) setRequestSent(true); }} />}
     </div>
   );
 };

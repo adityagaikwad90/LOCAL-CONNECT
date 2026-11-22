@@ -112,7 +112,7 @@ const NotificationsMenu = ({ currentUser, className = "" }) => {
       >
         <Bell size={20} className={isOpen ? 'text-white' : ''} />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1e1b4b] animate-pulse" />
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-orange-300 rounded-full border-2 border-[#101920]" />
         )}
       </button>
 

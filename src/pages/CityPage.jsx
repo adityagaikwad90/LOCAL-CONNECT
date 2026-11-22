@@ -87,7 +87,7 @@ const CityPage = () => {
           alt={cityData.name} 
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1e1b4b] via-[#1e1b4b]/80 to-[#1e1b4b]/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0d151b] via-[#0d151b]/80 to-[#0d151b]/25" />
       </div>
 
       <div className="relative z-10 pt-32 pb-20 container mx-auto px-4 min-h-screen flex flex-col">

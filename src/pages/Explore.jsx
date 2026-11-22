@@ -1,496 +1,60 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Star, User, Tag, ChevronDown, Users, Heart, Search, Filter } from 'lucide-react';
-import { trendingCities as mockTrendingCities } from '../data/mockData';
-import { GlassCard, GlassButton, Badge, Magnetic } from '../components/common/UIComponents';
-import CursorGlow from '../components/common/CursorGlow';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { db } from '../firebase/config';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { Heart, MapPin, Search, ShieldCheck, Star, Tag, UserRound } from 'lucide-react';
+import { trendingCities } from '../data/mockData';
+import { db } from '../firebase/config';
+import { useAuth } from '../context/AuthContext';
 
 const Explore = () => {
-  const [locations, setLocations] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState('');
-  const [locals, setLocals] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingLocations, setLoadingLocations] = useState(true);
-  const [trendingCities, setTrendingCities] = useState(mockTrendingCities);
-  const locationState = useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
+  const [selectedCity, setSelectedCity] = useState(location.state?.selectedCity || 'Mumbai');
+  const [locals, setLocals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [search, setSearch] = useState('');
   const { userData, updateUserData, currentUser } = useAuth();
+  const likedCities = userData?.likedCities || [];
 
-  const toggleLikeCity = async (e, cityName) => {
-    e.stopPropagation(); // Prevent navigation to city page
-    if (!currentUser) {
-      navigate('/login');
-      return;
-    }
-
-    const currentLikedCities = userData?.likedCities || [];
-    const isLiked = currentLikedCities.includes(cityName);
-    
-    let newLikedCities;
-    if (isLiked) {
-      newLikedCities = currentLikedCities.filter(city => city !== cityName);
-    } else {
-      newLikedCities = [...currentLikedCities, cityName];
-    }
-
-    try {
-      await updateUserData({ likedCities: newLikedCities });
-    } catch (err) {
-      console.error("Error toggling like:", err);
-    }
-  };
-
-  // Fetch locations on mount
   useEffect(() => {
-    const fetchLocalsCount = async () => {
-      try {
-        const updatedCities = await Promise.all(
-          mockTrendingCities.map(async (city) => {
-            const q = query(
-              collection(db, 'users'),
-              where('role', '==', 'local'),
-              where('location', '==', city.name)
-            );
-            const querySnapshot = await getDocs(q);
-            return { ...city, localsCount: querySnapshot.size };
-          })
-        );
-        setTrendingCities(updatedCities);
-      } catch (error) {
-        console.error("Error fetching locals count:", error);
-      }
-    };
+    if (location.state?.selectedCity) setSelectedCity(location.state.selectedCity);
+  }, [location.state?.selectedCity]);
 
-    fetchLocalsCount();
-  }, []);
-
-  // Fetch locations on mount
   useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'locations'));
-        const locData = [];
-        querySnapshot.forEach((doc) => {
-          locData.push({ id: doc.id, ...doc.data() });
-        });
-        
-        const requestedCity = locationState.state?.selectedCity;
-        if (requestedCity && !locData.some(loc => (loc.name || loc.id) === requestedCity)) {
-          locData.push({ id: requestedCity, name: requestedCity });
-        }
-        
-        // Ensure default Indian cities are always present
-        const defaultCities = ['Mumbai', 'Jaipur', 'Surat', 'Nashik', 'Vadodara'];
-        defaultCities.forEach(city => {
-          if (!locData.some(loc => (loc.name || loc.id) === city)) {
-            locData.push({ id: city, name: city });
-          }
-        });
-        
-        setLocations(locData);
-        
-        if (requestedCity) {
-          setSelectedLocation(requestedCity);
-        } else if (locData.length > 0) {
-          setSelectedLocation(locData[0].name || locData[0].id);
-        }
-      } catch (err) {
-        console.error("Error fetching locations:", err);
-      } finally {
-        setLoadingLocations(false);
-      }
-    };
+    let active = true;
+    setLoading(true);
+    setLoadError(false);
+    getDocs(query(collection(db, 'users'), where('role', '==', 'local'), where('location', '==', selectedCity)))
+      .then((snapshot) => { if (active) setLocals(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))); })
+      .catch((error) => { console.error('Could not load local guides:', error); if (active) { setLocals([]); setLoadError(true); } })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [selectedCity]);
 
-    fetchLocations();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const filteredLocals = useMemo(() => locals.filter((person) => {
+    const text = `${person.name || ''} ${person.bio || ''} ${(person.interests || []).join(' ')} ${(person.languages || []).join(' ')}`.toLowerCase();
+    return text.includes(search.trim().toLowerCase());
+  }), [locals, search]);
 
-  // Handle subsequent navigation changes while already on the Explore page
-  useEffect(() => {
-    if (locationState.state?.selectedCity && !loadingLocations) {
-      const requestedCity = locationState.state.selectedCity;
-      setSelectedLocation(requestedCity);
-      setLocations(prev => {
-        if (!prev.some(loc => (loc.name || loc.id) === requestedCity)) {
-          return [...prev, { id: requestedCity, name: requestedCity }];
-        }
-        return prev;
-      });
-    }
-  }, [locationState.state?.selectedCity, loadingLocations]);
-
-
-
-  // Fetch locals when selectedLocation changes
-  useEffect(() => {
-    if (!selectedLocation) return;
-
-    const fetchLocals = async () => {
-      setLoading(true);
-      try {
-        const q = query(
-          collection(db, 'users'),
-          where('role', '==', 'local'),
-          where('location', '==', selectedLocation)
-        );
-        const querySnapshot = await getDocs(q);
-        const localsData = [];
-        querySnapshot.forEach((doc) => {
-          localsData.push({ id: doc.id, ...doc.data() });
-        });
-        setLocals(localsData);
-      } catch (err) {
-        console.error("Error fetching locals:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLocals();
-  }, [selectedLocation]);
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
-  };
-
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 40 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 20 } }
+  const toggleSaved = async (cityName) => {
+    if (!currentUser) { navigate('/login'); return; }
+    const next = likedCities.includes(cityName) ? likedCities.filter((item) => item !== cityName) : [...likedCities, cityName];
+    try { await updateUserData({ likedCities: next }); } catch (error) { console.error('Could not save destination:', error); }
   };
 
   return (
-    <div className="relative min-h-screen bg-[#050510] overflow-hidden selection:bg-brand selection:text-white">
-      <CursorGlow />
+    <main className="page-shell min-h-screen">
+      <div className="mx-auto max-w-7xl px-5 pb-24 pt-32 sm:px-8">
+        <header className="max-w-3xl"><p className="eyebrow"><span className="h-2 w-2 rounded-full bg-emerald-300" />Meet the people behind the place</p><h1 className="mt-4 text-4xl font-semibold tracking-tight text-white sm:text-6xl">Find a local who <span className="text-orange-200">gets your kind of trip.</span></h1><p className="mt-5 max-w-2xl text-lg leading-8 text-white/55">Choose a city, explore what its locals love, and send a plan that makes it easy to say yes.</p></header>
 
-      {/* Animated Mesh Gradient, Noise, & Grid Overlay */}
-      <div className="fixed inset-0 z-0 mesh-gradient-bg pointer-events-none" />
-      <div className="fixed inset-0 z-0 grid-overlay opacity-[0.2] pointer-events-none" />
-      <div className="fixed inset-0 z-0 noise-bg opacity-[0.1] pointer-events-none mix-blend-overlay" />
-      
-      {/* Vibrant Floating Ambient Orbs */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none mix-blend-screen opacity-80">
-        <motion.div 
-          animate={{ x: [0, -100, 0], y: [0, 100, 0], scale: [1, 1.2, 1] }}
-          transition={{ repeat: Infinity, duration: 22, ease: "easeInOut" }}
-          className="absolute top-[10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-vibrant-indigo/20 blur-[160px]" 
-        />
-        <motion.div 
-          animate={{ x: [0, 150, 0], y: [0, -150, 0], scale: [1, 1.4, 1] }}
-          transition={{ repeat: Infinity, duration: 28, ease: "easeInOut" }}
-          className="absolute bottom-[20%] left-[-20%] w-[55vw] h-[55vw] rounded-full bg-brand/20 blur-[180px]" 
-        />
-        <motion.div 
-          animate={{ y: [0, 50, 0], x: [0, -50, 0], rotate: [0, -15, 0] }}
-          transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
-          className="absolute top-[40%] right-[20%] w-[35vw] h-[35vw] bg-accent/20 blur-[140px] rounded-full"
-        />
+        <section className="mt-12"><div className="mb-4 flex items-center justify-between gap-4"><h2 className="text-lg font-semibold text-white">Popular cities</h2><span className="text-sm text-white/45">{selectedCity} selected</span></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{trendingCities.slice(0, 10).map((city) => <button type="button" key={city.id} onClick={() => setSelectedCity(city.name)} className={`relative h-28 overflow-hidden rounded-2xl border text-left transition ${selectedCity === city.name ? 'border-orange-200/70 ring-2 ring-orange-200/20' : 'border-white/10 hover:border-white/30'}`}><img src={city.image} alt="" className="absolute inset-0 h-full w-full object-cover" /><span className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/35 to-transparent" /><span className="absolute bottom-3 left-3 font-semibold text-white">{city.name}</span><span className="absolute right-2 top-2 rounded-full bg-black/30 p-1.5 text-white/70 backdrop-blur" onClick={(event) => { event.stopPropagation(); toggleSaved(city.name); }}><Heart size={15} className={likedCities.includes(city.name) ? 'fill-orange-200 text-orange-200' : ''} /></span></button>)}</div></section>
+
+        <section className="mt-14"><div className="mb-6 flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="eyebrow">{selectedCity}</p><h2 className="section-title mt-2">Local guides <span className="text-white/40">({filteredLocals.length})</span></h2></div><label className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 sm:max-w-sm"><Search size={18} className="shrink-0 text-white/40" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search names, interests, languages" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35" /></label></div>
+          {loading ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2].map((item) => <div key={item} className="h-72 animate-pulse rounded-3xl border border-white/10 bg-white/[0.04]" />)}</div> : filteredLocals.length === 0 ? <div className="rounded-3xl border border-dashed border-white/15 bg-white/[0.025] px-6 py-16 text-center"><MapPin size={26} className="mx-auto text-orange-200" /><h3 className="mt-4 text-xl font-semibold text-white">{loadError ? 'Guides are temporarily unavailable' : locals.length ? 'No guides match that search' : `No guides in ${selectedCity} just yet`}</h3><p className="mx-auto mt-2 max-w-lg text-white/50">{loadError ? 'We could not connect to the guide directory. Please try again in a moment.' : locals.length ? 'Try a different name, interest, or language.' : 'Pick another city or come back when more locals join.'}</p></div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filteredLocals.map((guide) => <article key={guide.id} className="group overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] transition hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.06]"><div className="relative h-36 bg-gradient-to-br from-[#244346] to-[#182531]"><div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 15% 20%, #f6ad7b 0, transparent 35%), radial-gradient(circle at 90% 80%, #a2d2bb 0, transparent 35%)' }} />{guide.image ? <img src={guide.image} alt={guide.name} className="absolute bottom-4 left-5 h-20 w-20 rounded-2xl border-2 border-white/20 object-cover" /> : <div className="absolute bottom-4 left-5 flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-white/20 bg-white/10"><UserRound size={32} className="text-white/80" /></div>}<span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-white/15 bg-black/20 px-3 py-1 text-xs font-medium text-white/80"><ShieldCheck size={13} className="text-emerald-200" />Local guide</span></div><div className="p-5"><div className="flex items-start justify-between gap-3"><div><h3 className="text-xl font-semibold text-white">{guide.name || 'Local guide'}</h3><p className="mt-1 flex items-center gap-1.5 text-sm text-white/50"><MapPin size={14} />{guide.location || selectedCity}</p></div><span className="inline-flex items-center gap-1 rounded-lg bg-white/[0.07] px-2 py-1 text-sm font-semibold text-white"><Star size={14} className="fill-orange-200 text-orange-200" />{guide.rating || 'New'}</span></div><p className="mt-4 line-clamp-2 min-h-10 text-sm leading-5 text-white/55">{guide.bio || 'A local ready to share their favorite corners of the city.'}</p><div className="mt-4 flex min-h-7 flex-wrap gap-2">{(guide.interests || []).slice(0, 3).map((interest) => <span key={interest} className="inline-flex items-center gap-1 rounded-full bg-white/[0.07] px-2.5 py-1 text-xs text-white/70"><Tag size={11} />{interest}</span>)}</div><div className="mt-5 grid grid-cols-2 gap-2"><Link to={`/profile/${guide.id}`} className="button-secondary w-full">View profile</Link><Link to={`/profile/${guide.id}`} className="button-primary w-full">Plan a visit</Link></div></div></article>)}</div>}
+        </section>
       </div>
-
-      <div className="relative z-10 pt-40 min-h-screen container mx-auto px-4 pb-32">
-        {/* Header & Filter Area */}
-        <motion.div 
-          variants={staggerContainer}
-          initial="hidden"
-          animate="show"
-          className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 mb-20"
-        >
-          <div className="max-w-2xl">
-            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-white/20 bg-white/5 backdrop-blur-xl shadow-[0_0_30px_rgba(255,255,255,0.05)] mb-6">
-              <span className="w-2 h-2 rounded-full bg-accent-light animate-pulse"></span>
-              <span className="text-xs font-bold tracking-widest text-white uppercase">Live Network</span>
-            </motion.div>
-            <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl font-black text-white mb-4 tracking-tight drop-shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-              Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-light via-white to-white/60">Locals</span>
-            </motion.h1>
-            <motion.p variants={fadeInUp} className="text-white/60 text-xl font-medium leading-relaxed">
-              Find local experts in your destination and start connecting to uncover hidden gems.
-            </motion.p>
-          </div>
-          
-          <motion.div variants={fadeInUp} className="w-full lg:w-auto relative z-20">
-            <div className="glass p-3 pr-4 flex items-center gap-4 rounded-full border border-white/20 bg-white/5 backdrop-blur-3xl shadow-[0_0_50px_rgba(0,0,0,0.3)] hover:shadow-[0_0_40px_rgba(255,255,255,0.1)] transition-all duration-500 w-full lg:w-[450px] relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-r from-brand/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              
-              <div className="p-3 bg-white/10 rounded-full border border-white/10">
-                <Search size={20} className="text-white" />
-              </div>
-              
-              <div className="flex-1 relative">
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="bg-transparent border-none outline-none text-white py-2 w-full text-lg font-bold appearance-none cursor-pointer placeholder-white/30"
-                  disabled={loadingLocations}
-                >
-                  {loadingLocations ? (
-                    <option value="" disabled className="text-black">Loading locations...</option>
-                  ) : (
-                    <>
-                      <option value="" disabled className="text-black">Select a destination</option>
-                      {locations.map((loc) => (
-                        <option key={loc.id} value={loc.name || loc.id} className="text-black font-medium">
-                          {loc.name || loc.id}
-                        </option>
-                      ))}
-                    </>
-                  )}
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2 pl-4 border-l border-white/10">
-                <button className="p-2 text-white/50 hover:text-white transition-colors">
-                  <Filter size={20} />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-        <div>
-          <h1 className="text-4xl font-bold text-white mb-2">Explore Locals</h1>
-          <p className="text-white/50">Find local experts in your destination and start connecting.</p>
-        </div>
-        
-        <div className="flex flex-col w-full md:w-auto gap-4">
-          <div className="flex w-full md:w-96 relative">
-            <div className="flex-1 glass p-2 px-5 flex items-center gap-3 rounded-2xl relative">
-              <MapPin size={20} className="text-white/50" />
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="bg-transparent border-none outline-none text-white py-2 w-full text-base appearance-none cursor-pointer"
-                disabled={loadingLocations}
-              >
-                {loadingLocations ? (
-                  <option value="" disabled className="text-gray-800">Loading locations...</option>
-                ) : (
-                  <>
-                    <option value="" disabled className="text-gray-800">Select a location</option>
-                    {locations.map((loc) => (
-                      <option key={loc.id} value={loc.name || loc.id} className="text-gray-800">
-                        {loc.name || loc.id}
-                      </option>
-                    ))}
-                  </>
-                )}
-              </select>
-              <ChevronDown size={20} className="text-white/50 absolute right-4 pointer-events-none" />
-            </div>
-          </div>
-
-
-        </div>
-      </div>
-
-        {/* Popular Destinations */}
-        <motion.div 
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="mb-24 relative"
-        >
-          <div className="flex items-center justify-between mb-10">
-            <h2 className="text-3xl font-black text-white tracking-tight drop-shadow-md">Trending Spots</h2>
-            <Link to="#" className="text-brand-light font-bold hover:text-white transition-colors flex items-center gap-1 group">
-              View Map <ChevronDown size={16} className="-rotate-90 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {trendingCities.map((city, idx) => (
-              <motion.div
-                key={city.id}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1, duration: 0.6 }}
-                whileHover={{ scale: 1.02, rotateY: 5, rotateX: -5, zIndex: 10 }}
-                className="group cursor-pointer relative"
-                style={{ perspective: 1000 }}
-                onClick={() => navigate(`/city/${city.name}`)}
-              >
-                <div className="absolute -inset-0.5 bg-gradient-to-br from-brand to-accent opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-500 rounded-[2.5rem]" />
-                
-                <GlassCard className={`p-0 overflow-hidden aspect-[4/5] relative h-full rounded-[2.5rem] border transition-all duration-500 shadow-2xl ${selectedLocation === city.name ? 'border-brand shadow-[0_0_30px_rgba(225,29,72,0.3)]' : 'border-white/10'}`}>
-                  <img 
-                    src={city.image} 
-                    alt={city.name} 
-                    className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out"
-                  />
-                  
-                  {/* Floating Like Button */}
-                  <div className="absolute top-5 right-5 z-20">
-                    <button 
-                      onClick={(e) => toggleLikeCity(e, city.name)}
-                      className={`p-3 rounded-2xl backdrop-blur-xl border transition-all duration-500 ${
-                        userData?.likedCities?.includes(city.name) 
-                        ? 'bg-brand/80 border-brand text-white shadow-[0_0_20px_rgba(225,29,72,0.6)] animate-pulseGlow' 
-                        : 'bg-white/10 border-white/20 text-white hover:bg-white/30'
-                      }`}
-                    >
-                      <Heart size={20} className={`${userData?.likedCities?.includes(city.name) ? 'fill-current scale-110' : ''} transition-transform`} />
-                    </button>
-                  </div>
-
-                  {/* Gradient Overlay & Content */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent p-6 flex flex-col justify-end">
-                    <div className="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                      <Badge variant="white" className="w-fit mb-3 bg-white/20 backdrop-blur-md border-white/30 text-white">{city.country}</Badge>
-                      <h3 className="text-3xl font-black text-white mb-2 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] tracking-tight">{city.name}</h3>
-                      
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {city.topPlaces && city.topPlaces.slice(0, 2).map((place, i) => (
-                          <span key={i} className="text-xs font-bold bg-white/10 backdrop-blur-md text-white/90 px-2 py-1 rounded-md border border-white/10 shadow-sm">
-                            {place}
-                          </span>
-                        ))}
-                        {city.topPlaces && city.topPlaces.length > 2 && (
-                          <span className="text-xs font-bold bg-white/5 backdrop-blur-md text-white/50 px-2 py-1 rounded-md">
-                            +{city.topPlaces.length - 2}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center gap-4 text-white font-semibold text-sm">
-                        <span className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10">
-                          <Users size={14} className="text-white" /> {city.localsCount}
-                        </span>
-                        <span className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10">
-                          <Star size={14} className="text-yellow-400 fill-yellow-400" /> {city.rating}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </GlassCard>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* All Locals Section */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
-          <div className="flex justify-between items-center mb-10">
-            <h2 className="text-3xl font-black text-white tracking-tight drop-shadow-md">
-              {selectedLocation ? `Guides in ${selectedLocation}` : 'All Local Guides'}
-            </h2>
-            {selectedLocation && (
-              <span className="px-4 py-1.5 rounded-full bg-brand/20 text-brand-light font-bold text-sm border border-brand/30">
-                {locals.length} available
-              </span>
-            )}
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-32">
-              <div className="relative w-16 h-16">
-                <div className="absolute inset-0 rounded-full border-4 border-white/10"></div>
-                <div className="absolute inset-0 rounded-full border-4 border-brand border-t-transparent animate-spin"></div>
-                <div className="absolute inset-2 rounded-full border-4 border-accent border-b-transparent animate-spin-slow"></div>
-              </div>
-            </div>
-          ) : locals.length === 0 ? (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-32 glass rounded-[3rem] border-white/10 shadow-2xl relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-b from-brand/5 to-transparent pointer-events-none" />
-              <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6 border border-white/10">
-                <Search size={40} className="text-white/30" />
-              </div>
-              <h3 className="text-3xl font-black text-white mb-3">No guides found</h3>
-              <p className="text-white/50 text-lg max-w-md mx-auto">We couldn't find any locals registered in {selectedLocation}. Try selecting a different destination.</p>
-            </motion.div>
-          ) : (
-            <motion.div 
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            >
-              {locals.map((localUser) => (
-                <motion.div
-                  key={localUser.id}
-                  variants={fadeInUp}
-                  whileHover={{ y: -5 }}
-                >
-                  <GlassCard className="p-0 overflow-hidden flex flex-col h-full bg-white/5 border-white/10 hover:bg-white/10 transition-all duration-300 rounded-[2rem] shadow-xl group">
-                    <div className="relative h-40 bg-gradient-to-br from-brand/40 via-vibrant-indigo/40 to-accent/40 flex items-center justify-center overflow-hidden">
-                      <div className="absolute inset-0 bg-white/5 noise-bg mix-blend-overlay" />
-                      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-black/60" />
-                      
-                      {/* Avatar */}
-                      <div className="relative z-10 w-20 h-20 rounded-full bg-black/40 backdrop-blur-xl border-2 border-white/40 flex items-center justify-center shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:scale-105 transition-transform duration-500">
-                        <User size={36} className="text-white drop-shadow-md" />
-                      </div>
-                      
-                      <div className="absolute top-4 right-4 z-10">
-                        <Badge variant="accent" className="backdrop-blur-xl bg-white/20 border-white/30 text-white font-bold shadow-lg">
-                          Guide
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    <div className="p-6 flex-1 flex flex-col bg-black/40 backdrop-blur-3xl">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-2xl font-black text-white mb-1 drop-shadow-sm">{localUser.name}</h3>
-                          <div className="flex items-center gap-1.5 text-white/50 text-sm font-semibold">
-                            <MapPin size={14} className="text-brand-light" />
-                            {localUser.location}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-lg border border-white/5 shadow-inner">
-                          <Star size={12} className="fill-yellow-400 text-yellow-400" />
-                          <span className="text-white text-xs font-bold">New</span>
-                        </div>
-                      </div>
-
-                      <div className="mb-8 flex-1">
-                        <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-3">Expertise</p>
-                        <div className="flex flex-wrap gap-2">
-                          {localUser.interests && localUser.interests.map((interest, i) => (
-                            <span key={i} className="flex items-center gap-1 text-xs font-bold bg-white/10 text-white px-2.5 py-1.5 rounded-md border border-white/10 shadow-sm hover:bg-brand/20 transition-colors cursor-default">
-                              <Tag size={10} className="text-brand-light" />
-                              {interest}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="mt-auto space-y-3 relative z-20">
-                        <Link to={`/profile/${localUser.id}`}>
-                          <button className="w-full py-3 rounded-xl bg-white/10 text-white font-bold text-sm border border-white/20 hover:bg-white/20 transition-all shadow-lg">
-                            View Profile
-                          </button>
-                        </Link>
-                        <Link to={`/chat/${localUser.id}`}>
-                          <button className="liquid-button w-full py-3 rounded-xl bg-white text-black font-black text-sm hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-                            Message Guide
-                          </button>
-                        </Link>
-                      </div>
-                    </div>
-                  </GlassCard>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </motion.div>
-      </div>
-    </div>
+    </main>
   );
 };
 
